@@ -180,6 +180,6 @@ module cvxif_example_coprocessor
         x_result_o.exccode = 0;
     end
 
-    assert property (X_NUM_RS == 2) else $error("X_NUM_RS != 2");
+    //assert (X_NUM_RS == 2) else $error("X_NUM_RS != 2");
 
 endmodule

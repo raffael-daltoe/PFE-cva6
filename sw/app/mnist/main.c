@@ -7,6 +7,37 @@
 #include "Network.h"
 #include "util.h"
 
+int max_instr(int rs1, int rs2)
+{
+    int rd;
+
+    asm (
+        "mv x10, %1\n\t"           // Move input1 to x10
+        "mv x11, %2\n\t"           // Move input2 to x11
+        //"add x12, x10, x11\n\t"  // Perform addition: x12 = x10 + x11
+        ".word 0x00b5062b\n\t"
+        "mv %0, x12\n\t"           // Move the result from x12 to result
+        : "=r" (rd)                // Output operand
+        : "r" (rs1), "r" (rs2)     // Input operands
+        : "x10", "x11", "x12"      // Clobbered registers
+    );
+
+    return rd;
+}
+
+void experiments(void)
+{
+    printf("experiments begin\n");
+
+    for (int a = 0; a <= 5; a++) {
+        for (int b = 0; b <= 5; b++) {
+            int res = max_instr(a, b);
+            printf("max(%d, %d) -> %d\n", a, b, res);
+        }
+    }
+
+    printf("experiments end\n");
+}
 void readStimulus(
                   UDATA_T* inputBuffer,
                   Target_T* expectedOutputBuffer)
@@ -68,6 +99,8 @@ int main(int argc, char* argv[]) {
     instret += read_csr(minstret);
     cycles += read_csr(mcycle);
     
+    experiments();
+
     printf("Expected  = %d\n", expectedOutputBuffer[0]);
     printf("Predicted = %d\n", predictedOutputBuffer[0]);
     printf("Result : %d/1\n", success);
