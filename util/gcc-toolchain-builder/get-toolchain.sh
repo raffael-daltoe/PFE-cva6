@@ -137,5 +137,11 @@ setup_sources_from_git $GCC_REPO $GCC_DIR $GCC_COMMIT
 echo "# Step 3: Obtaining sources of newlib..."
 setup_sources_from_git $NEWLIB_REPO $NEWLIB_DIR $NEWLIB_COMMIT
 
+# 0001-xadac-extension.patch
+echo "# Step 4: Patching binutils-gdb with 0001-xadac-extension.patch..."
+cd $BINUTILS_DIR
+git apply ../../0001-xadac-extension.patch
+cd -
+
 # Exit happily.
 exit 0

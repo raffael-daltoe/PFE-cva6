@@ -7,19 +7,14 @@
 #include "Network.h"
 #include "util.h"
 
-int max_instr(int rs1, int rs2)
+inline int xadac_max(int rs1, int rs2)
 {
     int rd;
 
-    asm (
-        "mv x10, %1\n\t"           // Move input1 to x10
-        "mv x11, %2\n\t"           // Move input2 to x11
-        //"add x12, x10, x11\n\t"  // Perform addition: x12 = x10 + x11
-        ".word 0x00b5062b\n\t"
-        "mv %0, x12\n\t"           // Move the result from x12 to result
-        : "=r" (rd)                // Output operand
-        : "r" (rs1), "r" (rs2)     // Input operands
-        : "x10", "x11", "x12"      // Clobbered registers
+    asm volatile (
+        "xadac.max %[rd], %[rs1], %[rs2]\n\t"
+        : [rd] "=r" (rd)
+        : [rs1] "r" (rs1), [rs2] "r" (rs2)
     );
 
     return rd;
@@ -31,8 +26,8 @@ void experiments(void)
 
     for (int a = 0; a <= 5; a++) {
         for (int b = 0; b <= 5; b++) {
-            int res = max_instr(a, b);
-            printf("max(%d, %d) -> %d\n", a, b, res);
+            int res = xadac_max(a, b);
+            printf("xadac_max(%d, %d) -> %d\n", a, b, res);
         }
     }
 

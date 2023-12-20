@@ -1,0 +1,107 @@
+From 755a46160a4af3c6d4327217fb18914e1eff835b Mon Sep 17 00:00:00 2001
+From: alencar-felipe <alencar.felipe.paiva@gmail.com>
+Date: Wed, 20 Dec 2023 16:59:22 +0100
+Subject: [PATCH] xadac extension
+
+---
+ bfd/elfxx-riscv.c          | 11 +++++++++++
+ include/opcode/riscv-opc.h |  5 +++++
+ include/opcode/riscv.h     |  1 +
+ opcodes/riscv-opc.c        |  3 +++
+ 4 files changed, 20 insertions(+)
+
+diff --git a/bfd/elfxx-riscv.c b/bfd/elfxx-riscv.c
+index 19391d94..639518d6 100644
+--- a/bfd/elfxx-riscv.c
++++ b/bfd/elfxx-riscv.c
+@@ -1258,6 +1258,12 @@ static struct riscv_supported_ext riscv_supported_vendor_x_ext[] =
+   {NULL, 0, 0, 0, 0}
+ };
+ 
++static struct riscv_supported_ext riscv_supported_vendor_xadac_ext[] =
++{
++  {"xadac", ISA_SPEC_CLASS_DRAFT, 0, 0, 0},
++  {NULL, 0, 0, 0, 0}
++};
++
+ const struct riscv_supported_ext *riscv_all_supported_ext[] =
+ {
+   riscv_supported_std_ext,
+@@ -1265,6 +1271,7 @@ const struct riscv_supported_ext *riscv_all_supported_ext[] =
+   riscv_supported_std_s_ext,
+   riscv_supported_std_zxm_ext,
+   riscv_supported_vendor_x_ext,
++  riscv_supported_vendor_xadac_ext,
+   NULL
+ };
+ 
+@@ -2383,6 +2390,8 @@ riscv_multi_subset_supports (riscv_parse_subset_t *rps,
+       return riscv_subset_supports (rps, "xtheadmempair");
+     case INSN_CLASS_XTHEADSYNC:
+       return riscv_subset_supports (rps, "xtheadsync");
++    case INSN_CLASS_XADAC:
++      return riscv_subset_supports (rps, "xadac");
+     default:
+       rps->error_handler
+         (_("internal: unreachable INSN_CLASS_*"));
+@@ -2541,6 +2550,8 @@ riscv_multi_subset_supports_ext (riscv_parse_subset_t *rps,
+       return "xtheadmempair";
+     case INSN_CLASS_XTHEADSYNC:
+       return "xtheadsync";
++    case INSN_CLASS_XADAC:
++      return "xadac";
+     default:
+       rps->error_handler
+         (_("internal: unreachable INSN_CLASS_*"));
+diff --git a/include/opcode/riscv-opc.h b/include/opcode/riscv-opc.h
+index 85d35c1e..a5fab188 100644
+--- a/include/opcode/riscv-opc.h
++++ b/include/opcode/riscv-opc.h
+@@ -2342,6 +2342,9 @@
+ #define MASK_TH_SYNC_IS 0xffffffff
+ #define MATCH_TH_SYNC_S 0x0190000b
+ #define MASK_TH_SYNC_S 0xffffffff
++/* Vendor-specific XADAC instructions.  */
++#define MATCH_XADAC_MAX 0x2b
++#define MASK_XADAC_MAX 0xfe00707f
+ /* Unprivileged Counter/Timers CSR addresses.  */
+ #define CSR_CYCLE 0xc00
+ #define CSR_TIME 0xc01
+@@ -3236,6 +3239,8 @@ DECLARE_INSN(th_sync, MATCH_TH_SYNC, MASK_TH_SYNC)
+ DECLARE_INSN(th_sync_i, MATCH_TH_SYNC_I, MASK_TH_SYNC_I)
+ DECLARE_INSN(th_sync_is, MATCH_TH_SYNC_IS, MASK_TH_SYNC_IS)
+ DECLARE_INSN(th_sync_s, MATCH_TH_SYNC_S, MASK_TH_SYNC_S)
++/* Vendor-specific XADAC instructions.  */
++DECLARE_INSN(xadac_max, MATCH_XADAC_MAX, MASK_XADAC_MAX)
+ #endif /* DECLARE_INSN */
+ #ifdef DECLARE_CSR
+ /* Unprivileged Counter/Timers CSRs.  */
+diff --git a/include/opcode/riscv.h b/include/opcode/riscv.h
+index b4ae5524..3febdde1 100644
+--- a/include/opcode/riscv.h
++++ b/include/opcode/riscv.h
+@@ -422,6 +422,7 @@ enum riscv_insn_class
+   INSN_CLASS_XTHEADMEMIDX,
+   INSN_CLASS_XTHEADMEMPAIR,
+   INSN_CLASS_XTHEADSYNC,
++  INSN_CLASS_XADAC
+ };
+ 
+ /* This structure holds information for a particular instruction.  */
+diff --git a/opcodes/riscv-opc.c b/opcodes/riscv-opc.c
+index 6b65296a..a60487bb 100644
+--- a/opcodes/riscv-opc.c
++++ b/opcodes/riscv-opc.c
+@@ -2009,6 +2009,9 @@ const struct riscv_opcode riscv_opcodes[] =
+ {"th.sync.is",       0, INSN_CLASS_XTHEADSYNC,  "",   MATCH_TH_SYNC_IS,       MASK_TH_SYNC_IS,       match_opcode, 0},
+ {"th.sync.s",        0, INSN_CLASS_XTHEADSYNC,  "",   MATCH_TH_SYNC_S,        MASK_TH_SYNC_S,        match_opcode, 0},
+ 
++/* Vendor-specific XADAC instructions. */
++{"xadac.max", 0, INSN_CLASS_XADAC, "d,s,t", MATCH_XADAC_MAX, MASK_XADAC_MAX, match_opcode, 0},
++
+ /* Terminate the list.  */
+ {0, 0, INSN_CLASS_NONE, 0, 0, 0, 0, 0}
+ };
+-- 
+2.30.2
+

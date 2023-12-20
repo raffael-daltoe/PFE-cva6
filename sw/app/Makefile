@@ -28,6 +28,7 @@
 # 2020-10-06  0.1      k.Eyssartier Created
 # =========================================================================== #
 
+ARCH ?= rv32im_zicsr_xadac1
 XLEN ?= 32
 
 default: all
@@ -87,12 +88,14 @@ INCS += -I$(src_dir)/../bsp/config \
 	
 FLAGS_STR:="$(RISCV_CFLAGS)  $(RISCV_LDFLAGS) "
 
-CFLAGS ?=-march=rv32im_zicsr -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden -DSTDIO_THRU_UART -O3 -mcmodel=medany   -static  -Wall -pedantic 
+CFLAGS ?=-march=$(ARCH) -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden \
+	-DSTDIO_THRU_UART -O3 -mcmodel=medany   -static  -Wall -pedantic 
 
 RISCV_CFLAGS :=-DPERFORMANCE_RUN=1 \
-		-DITERATIONS=3 \
-		-DFLAGS_STR=\"$(FLAGS_STR)\" \
-		-march=rv32im_zicsr -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden -DSTDIO_THRU_UART -O3 -mcmodel=medany   -static  -Wall -pedantic 
+	-DITERATIONS=3 \
+	-DFLAGS_STR=\"$(FLAGS_STR)\" \
+	-march=$(ARCH) -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden \
+	-DSTDIO_THRU_UART -O3 -mcmodel=medany -static -Wall -pedantic
 
 RISCV_LDFLAGS=-L./ -lcva6 -static -nostartfiles -T $(src_dir)/../bsp/config/link.ld
 
