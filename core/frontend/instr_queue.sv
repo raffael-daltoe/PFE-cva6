@@ -286,11 +286,11 @@ ariane_pkg::FETCH_FIFO_DEPTH
             {(riscv::XLEN - riscv::VLEN) {1'b0}}, instr_data_out[i].ex_vaddr
           };
           fetch_entry_o.branch_predict.cf = instr_data_out[i].cf;
-          pop_instr[i] = fetch_entry_valid_o & fetch_entry_ready_i;
+          pop_instr[i] = fetch_entry_valid_o && fetch_entry_ready_i;
         end
       end
       // rotate the pointer left
-      if (fetch_entry_ready_i) begin
+      if (fetch_entry_valid_o && fetch_entry_ready_i) begin
         idx_ds_d = {
           idx_ds_q[ariane_pkg::INSTR_PER_FETCH-2:0], idx_ds_q[ariane_pkg::INSTR_PER_FETCH-1]
         };
@@ -314,7 +314,7 @@ ariane_pkg::FETCH_FIFO_DEPTH
       fetch_entry_o.branch_predict.predict_address = address_out;
       fetch_entry_o.branch_predict.cf = instr_data_out[0].cf;
 
-      pop_instr[0] = fetch_entry_valid_o & fetch_entry_ready_i;
+      pop_instr[0] = fetch_entry_valid_o && fetch_entry_ready_i;
     end
   end
 
@@ -329,7 +329,7 @@ ariane_pkg::FETCH_FIFO_DEPTH
     pc_d = pc_q;
     reset_address_d = flush_i ? 1'b1 : reset_address_q;
 
-    if (fetch_entry_ready_i) begin
+    if (fetch_entry_valid_o && fetch_entry_ready_i) begin
       // TODO(zarubaf): This needs to change for a dual issue implementation
       // advance the PC
       if (ariane_pkg::RVC == 1'b1) begin : gen_pc_with_c_extension

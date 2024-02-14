@@ -871,8 +871,9 @@ module cva6
   // ------------------------
   if (PERF_COUNTER_EN) begin : gen_perf_counter
     perf_counters #(
-        .CVA6Cfg (CVA6ExtendCfg),
-        .NumPorts(NumPorts)
+        .CVA6Cfg       (CVA6ExtendCfg),
+        .NumPorts      (NumPorts),
+        .MHPMCounterNum(MHPMCounterNum)
     ) perf_counters_i (
         .clk_i         (clk_i),
         .rst_ni        (rst_ni),
@@ -895,11 +896,29 @@ module cva6
         .resolved_branch_i  (resolved_branch),
         .branch_exceptions_i(flu_exception_ex_id),
         .l1_icache_access_i (icache_dreq_if_cache),
-        .l1_dcache_access_i (dcache_req_ports_ex_cache),
+        .l1_dcache_req_i_i   (dcache_req_ports_ex_cache),
+        .l1_dcache_req_o_i   (dcache_req_ports_cache_ex),
         .miss_vld_bits_i    (miss_vld_bits),
         .i_tlb_flush_i      (flush_tlb_ctrl_ex),
         .stall_issue_i      (stall_issue),
-        .mcountinhibit_i    (mcountinhibit_csr_perf)
+        .mcountinhibit_i    (mcountinhibit_csr_perf),
+
+        .if_id_fetch_valid_i (fetch_valid_if_id),
+        .if_id_fetch_ready_i (fetch_ready_id_if),
+        .is_ex_alu_valid_i   (alu_valid_id_ex),
+        .is_ex_alu_ready_i   (flu_ready_ex_id),
+        .is_ex_branch_valid_i(branch_valid_id_ex),
+        .is_ex_branch_ready_i(flu_ready_ex_id),
+        .is_ex_csr_valid_i   (csr_valid_id_ex),
+        .is_ex_csr_ready_i   (flu_ready_ex_id),
+        .is_ex_mult_valid_i  (mult_valid_id_ex),
+        .is_ex_mult_ready_i  (flu_ready_ex_id),
+        .is_ex_lsu_valid_i   (lsu_valid_id_ex),
+        .is_ex_lsu_ready_i   (lsu_ready_ex_id), 
+        .is_ex_fpu_valid_i   (fpu_valid_id_ex),
+        .is_ex_fpu_ready_i   (fpu_ready_ex_id),
+        .is_ex_cvxif_valid_i (x_issue_valid_id_ex),
+        .is_ex_cvxif_ready_i (x_issue_ready_ex_id)  
     );
   end : gen_perf_counter
   else begin : gen_no_perf_counter
