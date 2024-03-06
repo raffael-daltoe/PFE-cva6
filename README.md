@@ -126,7 +126,7 @@ user@[CONTAINER ID]:/workdir$ cd app
 user@[CONTAINER ID]:/workdir/app$ make mnist
 
 ```
-At the end of the compilation the mnist.riscv executable file must be created.
+At the end of the compilation the mnist.elf executable file must be created.
 
 4. Then, in the Docker container, launch **OpenOCD** in background:
 ```
@@ -153,7 +153,7 @@ Info : Listening on port 4444 for telnet connections
 
 5. In the Docker container (same terminal), launch **gdb** as following:
 ```
-user@[CONTAINER ID]:/workdir/app$ riscv-none-elf-gdb mnist.riscv
+user@[CONTAINER ID]:/workdir/app$ riscv-none-elf-gdb mnist.elf
 GNU gdb (GDB) 14.0.50.20230114-git
 Copyright (C) 2022 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
@@ -169,7 +169,7 @@ Find the GDB manual and other documentation resources online at:
 
 For help, type "help".
 Type "apropos word" to search for commands related to "word"...
-Reading symbols from mnist.riscv...
+Reading symbols from mnist.elf...
 (gdb)
 ```
 
@@ -183,7 +183,7 @@ Warn : Prefer GDB command "target extended-remote 3333" instead of "target remot
 (gdb)
 ```
 
-7. In **gdb**, load **mnist.riscv** to CV32A6 FPGA platform by the load command:
+7. In **gdb**, load **mnist.elf** to CV32A6 FPGA platform by the load command:
 ```
 (gdb) load
 Loading section .vectors, size 0x80 lma 0x80000000

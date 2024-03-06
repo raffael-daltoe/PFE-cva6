@@ -23,7 +23,7 @@
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv",
 	      "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
-ENTRY(_start)
+ENTRY(__boot_address)
 
 /* CORE-V */
 MEMORY

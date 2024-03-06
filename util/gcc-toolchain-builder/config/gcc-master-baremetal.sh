@@ -21,7 +21,7 @@
 #############################################################################
 
 # Name of the target to use for the toolchain.
-export TARGET=riscv-none-elf
+export TARGET=riscv32-unknown-elf
 
 # ======= Source code setup: path, repo, commit, configure options ========
 

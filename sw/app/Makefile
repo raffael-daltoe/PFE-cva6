@@ -28,21 +28,26 @@
 # 2020-10-06  0.1      k.Eyssartier Created
 # =========================================================================== #
 
-ARCH ?= rv32im_zicsr_xadac1
-XLEN ?= 32
+ARCH = rv32im_zicsr_xadac1
+PREFIX = riscv32-unknown-elf-
 
-default: all
+UTILS_DIR = ../utils
+APP_DIR   = $(abspath .)
+BSP_DIR   = ../bsp
 
-utils_dir= ../utils
-src_dir = $(abspath .)
-bsp_dir = ../bsp
+GCC     = $(PREFIX)gcc
+OBJCOPY = $(PREFIX)objcopy
+AR      = $(PREFIX)ar
+OBJDUMP = $(PREFIX)objdump
+SPIKE   = spike
+BIN2MEM = $(UTILS_DIR)/bin2mem.py
+MEM2COE = $(UTILS_DIR)/mem2coe.py
 
+PK = $(RISCV)/riscv32-unknown-elf/bin/pk
 
-#--------------------------------------------------------------------
-# Sources
-#--------------------------------------------------------------------
+LDSCRIPT = $(BSP_DIR)/config/link.ld
 
-bmarks = \
+BMARKS = \
 	coremark \
 	helloworld \
 	helloworld_printf \
@@ -58,100 +63,76 @@ bmarks = \
 	mnist \
 	mnist_adac
 
-#--------------------------------------------------------------------
-# Build rules
-#--------------------------------------------------------------------
+BSP_SRC_S = $(wildcard $(BSP_DIR)/hal/*.S)
 
-RISCV_PREFIX ?= riscv-none-elf-
-RISCV_GCC ?= $(RISCV_PREFIX)gcc
-RISCV_OBJCOPY ?= $(RISCV_PREFIX)objcopy
-RISCV_AR ?= $(RISCV_PREFIX)ar
-RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump
+BSP_SRC_C = \
+	$(wildcard $(BSP_DIR)/hal/*.c) \
+	$(wildcard $(BSP_DIR)/drivers/uart/*.c) 
 
+BSP_OBJ_S = $(SRC_BSP_S:.S=.o)
+BSP_OBJ_C = $(SRC_BSP_C:.c=.o)
+BSP_OBJ   = $(BSP_OBJ_S) $(BSP_OBJ_C)
 
-SRC_BSP_C=$(wildcard $(bsp_dir)/hal/*.c) $(wildcard $(bsp_dir)/drivers/uart/*.c) 
-SRC_BSP_S=$(wildcard $(bsp_dir)/hal/*.S)
+ALL_OBJ += $(BSP_OBJ)
 
-
-OBJ_BSP_C=$(SRC_BSP_C:.c=.o)
-OBJ_BSP_S=$(SRC_BSP_S:.S=.o)
-OBJ_BSP= $(OBJ_BSP_S) $(OBJ_BSP_C)
-
-
-OBJ_APP=$(wildcard $(src_dir)/*.o) 
-
-INCS += -I$(src_dir)/../bsp/config \
-	-I$(src_dir)/../bsp/drivers/uart \
-	-I$(src_dir)/../bsp/hal \
-	-I$(src_dir)/coremark/simple \
-	-I$(src_dir)/common \
-	$(addprefix -I$(src_dir)/, $(bmarks))
+INCS += \
+	$(BSP_DIR)/config \
+	$(BSP_DIR)/drivers/uart \
+	$(BSP_DIR)/hal \
+	$(APP_DIR)/coremark/simple \
+	$(APP_DIR)/common \
+	$(APP_DIR)/$(BMARKS)
 	
-FLAGS_STR:="$(RISCV_CFLAGS)  $(RISCV_LDFLAGS) "
-
-CFLAGS ?=-march=$(ARCH) -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden \
+CFLAGS = -march=$(ARCH) -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden \
 	-DSTDIO_THRU_UART -g -O3 -mcmodel=medany -static -Wall -pedantic 
 
-RISCV_CFLAGS :=-DPERFORMANCE_RUN=1 \
-	-DITERATIONS=3 \
-	-DFLAGS_STR=\"$(FLAGS_STR)\" \
-	-march=$(ARCH) -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden \
-	-DSTDIO_THRU_UART -g -O3 -mcmodel=medany -static -Wall -pedantic
+LDFLAGS = -static -nostartfiles -T $(LDSCRIPT)
 
-RISCV_LDFLAGS=-L./ -lcva6 -static -nostartfiles -T $(src_dir)/../bsp/config/link.ld
+all: $(BMARKS)
 
+define GEN_BMARK_RULES
+$(1)_SRC = $$(shell find $(APP_DIR)/$(1) -name "*.c")
+$(1)_OBJ = $$($(1)_SRC:.c=.o)
 
+ALL_OBJ += $$($(1)_OBJ)
 
-incs  += -I$(src_dir)/../env -I$(src_dir)/common $(addprefix -I$(src_dir)/, $(bmarks))
-objs  :=
+$(1).elf: $$($(1)_OBJ)
+	$$(GCC) $$(BSP_OBJ) $$(CFLAGS) $$(LDFLAGS) -o $$@ $$^
 
+$(1)_pk.elf: $$($(1)_OBJ)
+	$$(GCC) $$(CFLAGS) -o $$@ $$^
 
-define generate_rules =
-$(1)_SRC_DIR = ./$(1)/
-$(1)_SRC_FILES = $$(shell find $$($(1)_SRC_DIR) -name "*.c")
-$(1)_OBJ_FILES = $$($(1)_SRC_FILES:.c=.o)
-ALL_OBJ += $$($(1)_OBJ_FILES)
-$(1): $(1).D $(1).riscv
-$(1): $(1).hex $(1).riscv
-$(1): $(1).bin $(1).riscv
-$(1): $(1).mem $(1).bin
-$(1): $(1).coe $(1).mem
-$(1).riscv: libcva6.a $$($(1)_OBJ_FILES)
-	# LINKING
-	$$(RISCV_GCC) $$(RISCV_CFLAGS) -o $$@ $$^ $$(RISCV_LDFLAGS)
+.PHONY: $(1)
+$(1): $(1).elf $(1).dump $(1).hex $(1).bin $(1).mem $(1).coe
+
+.PHONY:
+$(1)_spike: $(1)_pk.elf $(1)_pk.dump
+	$$(SPIKE) $$(PK) $(1)_pk.elf
+
 endef
 
-$(foreach bmark,$(bmarks),$(eval $(call generate_rules,$(bmark))))
+$(foreach BMARK,$(BMARKS),$(eval $(call GEN_BMARK_RULES,$(BMARK))))
 
-%.D: %.riscv 
-	$(RISCV_OBJDUMP) -D $< > $@
+%.dump: %.elf 
+	$(OBJDUMP) -D $< > $@
 
-%.hex: %.riscv
-	$(RISCV_OBJCOPY) -O ihex $< $@
+%.hex: %.elf
+	$(OBJCOPY) -O ihex $< $@
 
-%.bin: %.riscv
-	$(RISCV_OBJCOPY) -O binary $< $@
-
-libcva6.a: $(OBJ_BSP)
-	$(RISCV_AR) rcs libcva6.a $(OBJ_BSP)
+%.bin: %.elf
+	$(OBJCOPY) -O binary $< $@
 
 %.o: %.c
-	$(RISCV_GCC) $(INCS) -o $@ -c $< $(RISCV_CFLAGS)
+	$(GCC) $(CFLAGS) $(addprefix -I, $(INCS)) -o $@ -c $< 
 
 %.o: %.S
-	$(RISCV_GCC) -o $@ -c $< $(CFLAGS)
+	$(GCC) -o $@ -c $< $(CFLAGS)
 
 %.mem: %.bin
-	$(utils_dir)/bin2mem.py $(src_dir)/$<
+	$(BIN2MEM) $(APP_DIR)/$<
 
 %.coe: %.mem
-	$(utils_dir)/mem2coe.py $(src_dir)/$<
-
-
-all: $(bmarks)
-
+	$(MEM2COE) $(APP_DIR)/$<
 
 clean:
-	rm -rf $(OBJ_BSP) $(ALL_OBJ) libcva6.a *.riscv *.o *.D *.mem *.bin *.coe *.hex
-
-
+	rm -rf $(ALL_OBJ) *.elf *.o *.dump *.mem *.bin *.coe *.hex
