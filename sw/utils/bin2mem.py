@@ -32,6 +32,7 @@
 import sys
 import math
 import binascii
+from pathlib import Path
 
 ###############################################################################
 # Start of file
@@ -40,15 +41,15 @@ if(len(sys.argv) < 2):
     print("Usage bin2mem.py FILENAME")
     quit()
 
-filename = sys.argv[1].strip('.bin') + ".mem"
+file_path = f'{Path(sys.argv[1]).stem}.mem'
 
-mem_file  = open(filename,    'wb')
+mem_file  = open(file_path, 'w')
 
-with open(sys.argv[1], "rb") as f:
+with open(sys.argv[1], 'rb') as f:
     bytes_read = f.read(8)
     while bytes_read:
         bytes_read_inv = bytes_read[::-1]
-        mem_file.write(b"%s\n" %binascii.hexlify(bytes_read_inv) )
+        mem_file.write(f'{binascii.hexlify(bytes_read_inv)}\r\n')
         bytes_read = f.read(8)
     
 ###############################################################################

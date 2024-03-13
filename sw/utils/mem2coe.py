@@ -32,6 +32,7 @@
 import sys
 import math
 import binascii
+from pathlib import Path
 
 ###############################################################################
 # Start of file
@@ -40,19 +41,19 @@ if(len(sys.argv) < 2):
     print ("Usage mem2coe.py FILENAME")
     quit()
 
-filename = sys.argv[1].strip('.mem') + ".coe"
+file_path = f'{Path(sys.argv[1]).stem}.coe'
 
-mem_file  = open(filename,    'wb')
-mem_file.write(b"MEMORY_INITIALIZATION_RADIX=16;\n")
-mem_file.write(b"MEMORY_INITIALIZATION_VECTOR=")
-with open(sys.argv[1], "rb") as f:
+mem_file = open(file_path, 'w')
+mem_file.write("MEMORY_INITIALIZATION_RADIX=16;\n")
+mem_file.write("MEMORY_INITIALIZATION_VECTOR=")
+with open(sys.argv[1], "r") as f:
     mem_lines = f.readlines()
     for line in mem_lines:
         mem_file.write(line.strip())
         if line != mem_lines[-1]:
-            mem_file.write(b",\n")
+            mem_file.write(",\n")
         else:
-            mem_file.write(b";\n")
+            mem_file.write(";\n")
 
     #while mem_lines:
     	#bytes_read_inv = bytes_read[::-1]

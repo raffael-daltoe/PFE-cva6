@@ -48,20 +48,10 @@ PK = $(RISCV)/riscv32-unknown-elf/bin/pk
 LDSCRIPT = $(BSP_DIR)/config/link.ld
 
 BMARKS = \
-	coremark \
-	helloworld \
-	helloworld_printf \
-	median \
-	qsort \
-	rsort \
-	towers \
-	vvadd \
-	multiply \
-	dhrystone \
-	spmv \
-	pmp \
 	mnist \
-	mnist_adac
+	mnist_adac \
+	mnist_base \
+	mnist_clean
 
 BSP_SRC_S = $(wildcard $(BSP_DIR)/hal/*.S)
 
@@ -80,8 +70,7 @@ INCS += \
 	$(BSP_DIR)/drivers/uart \
 	$(BSP_DIR)/hal \
 	$(APP_DIR)/coremark/simple \
-	$(APP_DIR)/common \
-	$(APP_DIR)/$(BMARKS)
+	$(APP_DIR)/common
 	
 CFLAGS = -march=$(ARCH) -mabi=ilp32 -DPREALLOCATE=1 -fvisibility=hidden \
 	-DSTDIO_THRU_UART -g -O3 -mcmodel=medany -static -Wall -pedantic 
@@ -100,7 +89,7 @@ $(1).elf: $$($(1)_OBJ)
 	$$(GCC) $$(BSP_OBJ) $$(CFLAGS) $$(LDFLAGS) -o $$@ $$^
 
 $(1)_pk.elf: $$($(1)_OBJ)
-	$$(GCC) $$(CFLAGS) -o $$@ $$^
+	$$(GCC) $$(CFLAGS) -I $(APP_DIR)/$$(1) -o $$@ $$^
 
 .PHONY: $(1)
 $(1): $(1).elf $(1).dump $(1).hex $(1).bin $(1).mem $(1).coe
