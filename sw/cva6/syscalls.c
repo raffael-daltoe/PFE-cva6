@@ -281,6 +281,7 @@ int _wait(int *status)
 ssize_t _write(int file, const void *ptr, size_t len)
 {
 
+#define STDIO_THRU_UART
 #ifdef STDIO_THRU_UART
   /*--------------------------------------------------------------------------
   * Initialize the UART driver if it is the first time this function is

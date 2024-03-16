@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "util.h"
 #include "network.h"
 #include "resources/all.h"
 
@@ -37,12 +36,12 @@ int main() {
 #endif
 
     printf(TAG "expected: %d\n", expected);
-    printf(TAG "output: %d\n", output);
+    printf(TAG "output: %ld\n", output);
     printf(TAG "credence: %d\n", credence);
 
 #ifdef PERFORMANCE_RUN
-    printf(TAG "instrutions: %d\n", (int)(instret));
-    printf(TAG "cycles: %d\n", (int)(cycles));
+    printf(TAG "instrutions: %ld\n", instret);
+    printf(TAG "cycles: %ld\n", cycles);
 #endif
 
 }

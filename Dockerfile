@@ -76,7 +76,8 @@ RUN apt-get -y update && \
     python3-ply \
     python3-setuptools \
     python-is-python3 \
-    device-tree-compiler
+    device-tree-compiler \
+    cmake
 
 RUN mkdir -p /opt/riscv/bin
 ENV RISCV="/opt/riscv"		

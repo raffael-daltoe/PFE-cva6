@@ -98,41 +98,38 @@ docker build -f Dockerfile --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t 
 
 the **sw-docker** Docker container consists of the entire RISC-V compilation chain as well as the openocd tool.
 
-2. To compile software applications in **sw/app**, you need to use Docker container with the following command:
+2. To build the software in `./sw`, you'll need the Docker image.
+To use it, run the command below in the project's root directory:
 
 ```
-docker run -ti --privileged -v `realpath sw`:/workdir sw-docker:v1
+docker run -ti --privileged -v $(pwd):/workdir sw-docker:v1
 ```
 
-The **sw** directory is mounted in the docker container.
-![alt text](./docs/pictures/docker_image.png)
+The `./` directory is mounted within the Docker container.
 
-Once in the **sw-docker** Docker container, you are in the default directory **/workdir** which corresponds to the sw directory in the host OS.
-
-```
-user@[CONTAINER ID]:/workdir$ ll
-total 24
-drwxrwxr-x  5 user user 4096 Nov 23 10:57 ./
-drwxr-xr-x  1 root root 4096 Nov 24 09:09 ../
--rw-rw-r--  1 user user 2620 Nov 23 10:57 README.md
-drwxrwxr-x 18 user user 4096 Nov 23 10:59 app/
-drwxrwxr-x  5 user user 4096 Nov 23 10:57 bsp/
-drwxrwxr-x  2 user user 4096 Nov 23 10:57 utils/
-```
+Once in the **sw-docker** Docker container, you are in the default directory
+**/workdir** which corresponds to `./` directory in the host OS.
 
 3. To compile mnist application, run the following commands.
-```
-user@[CONTAINER ID]:/workdir$ cd app
-user@[CONTAINER ID]:/workdir/app$ make mnist
 
 ```
-At the end of the compilation the mnist.elf executable file must be created.
+user@[CONTAINER ID]:/workdir$ cd sw
+user@[CONTAINER ID]:/workdir/sw$ mkdir build
+user@[CONTAINER ID]:/workdir/sw$ cd build
+user@[CONTAINER ID]:/workdir/sw/build$ cmake ..
+user@[CONTAINER ID]:/workdir/sw/build$ make mnist
+```
+
+Once the compilation process is complete, the resulting executable can be
+located in the build directory.
+It will bear the target's name without any extension.
+In this specific case, the executable will be named `mnist`.
 
 4. Then, in the Docker container, launch **OpenOCD** in background:
 ```
-user@[CONTAINER ID]:/workdir/app$ openocd -f openocd_digilent_hs2.cfg &
+user@[CONTAINER ID]:/workdir/sw/build$ openocd -f ../openocd_digilent_hs2.cfg &
 [1] 90
-user@[CONTAINER ID]:/workdir/app$ Open On-Chip Debugger 0.11.0-dirty (2023-11-23-09:23)
+user@[CONTAINER ID]:/workdir/sw/build$ Open On-Chip Debugger 0.11.0-dirty (2023-11-23-09:23)
 Licensed under GNU GPL v2
 For bug reports, read
     http://openocd.org/doc/doxygen/bugs.html
@@ -153,14 +150,14 @@ Info : Listening on port 4444 for telnet connections
 
 5. In the Docker container (same terminal), launch **gdb** as following:
 ```
-user@[CONTAINER ID]:/workdir/app$ riscv-none-elf-gdb mnist.elf
+user@[CONTAINER ID]:/workdir/sw/build$ riscv32-unknown-elf-gdb mnist
 GNU gdb (GDB) 14.0.50.20230114-git
 Copyright (C) 2022 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 Type "show copying" and "show warranty" for details.
-This GDB was configured as "--host=x86_64-pc-linux-gnu --target=riscv-none-elf".
+This GDB was configured as "--host=x86_64-pc-linux-gnu --target=riscv32-unknown-elf".
 Type "show configuration" for configuration details.
 For bug reporting instructions, please see:
 <https://www.gnu.org/software/gdb/bugs/>.
@@ -173,7 +170,7 @@ Reading symbols from mnist.elf...
 (gdb)
 ```
 
-6. In **gdb**, you need to connect gdb to **openocd** as following:
+6. In **gdb**, you need to connect gdb to **OpenOCD** as following:
 ```
 (gdb) target remote :3333
 Remote debugging using :3333
@@ -183,7 +180,7 @@ Warn : Prefer GDB command "target extended-remote 3333" instead of "target remot
 (gdb)
 ```
 
-7. In **gdb**, load **mnist.elf** to CV32A6 FPGA platform by the load command:
+7. In **gdb**, load **mnist** to CV32A6 FPGA platform by the load command:
 ```
 (gdb) load
 Loading section .vectors, size 0x80 lma 0x80000000
@@ -221,15 +218,15 @@ When MNIST is rerun system is not at initial state. For instance, cache is prelo
 
 # Simulation get started
 When the development environment is set up, it is now possible to run a simulation.
-Some software applications are available into the **sw/app** directory. Especially, there are benchmark applications such as Dhrystone and CoreMark and other test applications.
+Some software applications are available into the `./sw` directory.
 
 To simulate a software application on CVA6 processor, run the following command:
 ```
-$ make sim APP=’application to run’
+$ make sim MEM_PATH=<path to .mem file>
 ```
 For instance, if you want to run the **mnist** application, you will have to run :
 ```
-$ make sim APP=mnist
+$ make sim MEM_PATH=sw/build/mnist.mem
 ```
 
 **This command:**
@@ -255,7 +252,7 @@ image env0003: 1731593 instructions
 image env0003: 2316653 cycles
 ```
 
-CVA6 software environment is detailed into `sw/app` directory.
+CVA6 software environment is detailed into `./sw` directory.
 
 # Synthesis and place and route get started
 You can perform synthesis and place and route of the CVA6 architecture.

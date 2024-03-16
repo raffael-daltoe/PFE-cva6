@@ -63,12 +63,12 @@ void hexdump(const void *buf, size_t len) {
 
 // decode_img =================================================================
 
-// Image buffer a 24x24 PGM image with the label appended at end.
+// The buffer contains a 24x24 PGM image followed by its label.
 
 void decode_img(const void *buf, void **image, int32_t *label)
 {
     uint8_t *ptr = (uint8_t *) buf;
 
     *image = (void *) (ptr += 13);
-    *label = *(int32_t *) (ptr += 24*24);
+    *label = *(uint8_t *) (ptr += 24*24);
 }

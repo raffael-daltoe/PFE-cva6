@@ -56,10 +56,8 @@ test-location  ?= output/test
 # set to either nothing or -log
 torture-logs   :=
 # custom elf bin to run with sim or sim-verilator
-elf-bin        ?= sw/app/benchmarks/coremark.riscv
-
-# Application to simulate
-APP            ?= mnist
+ELF_PATH ?= sw/build/mnist
+MEM_PATH ?= sw/build/mnist.mem
 
 # root path
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -72,7 +70,7 @@ endif
 
 
 # software application path
-APP_PATH := $(root-dir)/sw/app
+SW_PATH := $(root-dir)/sw
 
 support_verilator_4 := $(shell ($(verilator) --version | grep '4\.') > /dev/null 2>&1 ; echo $$?)
 ifeq ($(support_verilator_4), 0)
@@ -282,7 +280,7 @@ endif
 # we want to preload the memories
 ifdef preload
 	questa-cmd += +PRELOAD=$(preload)
-	elf-bin = none
+	ELF_PATH = none
 endif
 
 ifdef spike-tandem
@@ -308,7 +306,7 @@ vcs_build: $(dpi-library)/ariane_dpi.so
 	vcs $(if $(VERDI), -kdb -debug_access+all -lca,) -full64 -timescale=1ns/1ns -ntb_opts uvm-1.2 work.ariane_tb -error="IWNF"
 
 vcs: vcs_build
-	cd $(vcs-library) && ./simv  $(if $(VERDI), -verdi -do $(root-dir)/util/init_testharness.do,) +permissive -sv_lib ../work-dpi/ariane_dpi +PRELOAD=$(elf-bin) +permissive-off ++$(elf-bin)| tee vcs.log
+	cd $(vcs-library) && ./simv  $(if $(VERDI), -verdi -do $(root-dir)/util/init_testharness.do,) +permissive -sv_lib ../work-dpi/ariane_dpi +PRELOAD=$(ELF_PATH) +permissive-off ++$(ELF_PATH)| tee vcs.log
 
 # Build the TB and module using QuestaSim
 build: $(library) $(library)/.build-srcs $(library)/.build-tb
@@ -342,7 +340,7 @@ sim: build
 	echo $(riscv-benchmarks)
 	vsim${questa_version} +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) +UVM_TESTNAME=$(test_case) \
 	 $(uvm-flags) $(QUESTASIM_FLAGS)  \
-	${top_level}_optimized +permissive-off +binary_mem=$(APP_PATH)/$(APP).mem | tee sim.log
+	${top_level}_optimized +permissive-off +binary_mem=$(MEM_PATH) | tee sim.log
 
 
 run-benchmarks: $(riscv-benchmarks)
@@ -427,7 +425,7 @@ xrun_sim: xrun_comp
 		+UVM_TESTNAME=$(test_case)	\
 		-l $(XRUN_RUN_LOG)		\
 		+permissive-off			\
-		++$(elf-bin)
+		++$(ELF_PATH)
 
 #-e "set_severity_pack_assert_off {warning}; set_pack_assert_off {numeric_std}" TODO: This will remove assertion warning at the beginning of the simulation.
 
@@ -542,7 +540,7 @@ verilate:
 	cd $(ver-library) && $(MAKE) -j${NUM_JOBS} -f Variane_testharness.mk
 
 sim-verilator: verilate
-	$(ver-library)/Variane_testharness $(elf-bin)
+	$(ver-library)/Variane_testharness $(ELF_PATH)
 
 $(addsuffix -verilator,$(riscv-asm-tests)): verilate
 	$(ver-library)/Variane_testharness $(riscv-test-dir)/$(subst -verilator,,$@)

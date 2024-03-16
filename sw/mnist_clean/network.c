@@ -40,7 +40,7 @@
 #define FC2_I    ( 150) // Number of Inputs
 #define FC2_BIAS (1024) // Bias Value
 
-static uint8_t conv1_oput[CONV1_O_SIZE];
+static uint8_t conv1_output[CONV1_O_SIZE];
 static uint8_t conv2_output[CONV2_O_SIZE];
 static uint8_t fc1_output[FC1_O];
 static uint8_t fc2_output[FC2_O];
@@ -201,15 +201,15 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0x4dfde263);
 #endif
 
-    conv1(input, conv1_oput, conv1_weight);
+    conv1(input, conv1_output, conv1_weight);
 
 #ifdef VALIDATION_RUN
     crc = 0;
-    crc32(&crc, conv1_oput, CONV1_O_SIZE);
+    crc32(&crc, conv1_output, CONV1_O_SIZE);
     ASSERT(crc == 0xa6062dba);
 #endif
 
-    conv2(conv1_oput, conv2_output, conv2_weight);
+    conv2(conv1_output, conv2_output, conv2_weight);
 
 #ifdef VALIDATION_RUN    
     crc = 0;
