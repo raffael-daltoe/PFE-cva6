@@ -30,8 +30,6 @@
 # =========================================================================== #
 
 import sys
-import math
-import binascii
 from pathlib import Path
 
 ###############################################################################
@@ -48,8 +46,8 @@ mem_file  = open(file_path, 'w')
 with open(sys.argv[1], 'rb') as f:
     bytes_read = f.read(8)
     while bytes_read:
-        bytes_read_inv = bytes_read[::-1]
-        mem_file.write(f'{binascii.hexlify(bytes_read_inv)}\r\n')
+        line = ''.join(f'{byte:02x}' for byte in bytes_read[::-1])
+        mem_file.write(f'{line}\r\n')
         bytes_read = f.read(8)
     
 ###############################################################################
