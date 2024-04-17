@@ -18,11 +18,7 @@ void vload(size_t vd, const void *rs1, int32_t imm)
     uint8_t *ptr = (uint8_t *) rs1;
 
     for (size_t i = 0; i < V8LEN; i++) {
-        if (i < imm) {
-            vrf_u8[vd*V8LEN + i] = ptr[i];
-        } else {
-            vrf_u8[vd*V8LEN + i] = 0;
-        }
+        vrf_u8[vd*V8LEN + i] = ptr[i % imm];
     }
 }
 
@@ -50,16 +46,9 @@ void vmacc(size_t vd, size_t vs2, size_t vs1, int32_t imm)
 #endif
 
     for (size_t i = 0; i < V32LEN; i++) {
-        for (size_t j = 0; j < 4; j++) {
-            int32_t mul;
-            if (j < imm) {
-                mul = vrf_i8[vs2*V8LEN + i*4 + j] * vrf_u8[vs1*V8LEN + j];
-                // printf("%4d %4d\n", (int) vrf_i8[vs2*V8LEN + 4*i + j], (int) vrf_u8[vs1*V8LEN + 4*i + j]);
-            } else {
-                mul = 0;
-                exit(-1);
-            }
-            vrf_i32[vd*V32LEN + i] += mul;
+        for (size_t j = 0; j < imm; j++) {
+            vrf_i32[vd*V32LEN + i] +=
+                vrf_i8[vs2*V8LEN + i*imm + j] * vrf_u8[vs1*V8LEN + i*imm + j];
         }
     }
 }

@@ -1,6 +1,6 @@
 #include "network.h"
 
-// CONV1
+// CONV1 | 30976 MACs (12.7 %)
 #define L0_ON    ( 16) // Number of Outputs
 #define L0_OY    ( 11) // Output Height
 #define L0_OX    ( 11) // Output Width
@@ -20,7 +20,7 @@
 #define L0_I_SIZE (L0_IN*L0_IY*L0_IX)
 #define L0_W_SIZE (L0_WX*L0_WY*L0_IA*L0_ON*L0_IB)
 
-// CONV2
+// CONV2 | 153600 MACs (63.0 %)
 #define L1_ON    ( 24) // Number of Outputs
 #define L1_OY    (  4) // Output Height
 #define L1_OX    (  4) // Output Width
@@ -40,7 +40,7 @@
 #define L1_I_SIZE (L1_IN*L1_IY*L1_IX)
 #define L1_W_SIZE (L1_WX*L1_WY*L1_IA*L1_ON*L1_IB)
 
-// FC1
+// FC1 | 57600 MACs (23.6%)
 #define L2_ON    (150) // Number of Outputs
 #define L2_OY    (  1) // Output Height
 #define L2_OX    (  1) // Output Width
@@ -60,7 +60,7 @@
 #define L2_I_SIZE (L2_IN*L2_IY*L2_IX)
 #define L2_W_SIZE (L2_WX*L2_WY*L2_IA*L2_ON*L2_IB)
 
-// FC2
+// FC2 | 1500 MACs (00.6%)
 #define L3_ON    (  10) // Number of Outputs
 #define L3_OY    (   1) // Output Height
 #define L3_OX    (   1) // Output Width
@@ -154,7 +154,7 @@ while(on + ON_STEP <= L##_ON) { \
     on += ON_STEP; \
 }
 
-#define CONV_M(L, O, I, W) \
+#define CONV(L, O, I, W) \
 do { \
     size_t sum_vi32 = 1; \
     size_t input_vu8 = 2; \
@@ -207,13 +207,7 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0xa6062dba);
 #endif
 
-    // CONV(L1, l1_out, l0_out, l1_weight);
-    // hexdump(l1_out, L1_O_SIZE);
-
-    // printf("\n\n\n");
-
-    CONV_M(L1, l1_out, l0_out, l1_weight);
-    // hexdump(l1_out, L1_O_SIZE);
+    CONV(L1, l1_out, l0_out, l1_weight);
 
 #ifdef VALIDATION_RUN
     crc = 0;
