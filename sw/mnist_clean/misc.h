@@ -9,6 +9,9 @@
 #define STR_(x) #x
 #define STR(x) STR_(x)
 
+#define MIN(x, y) (((x) <= (y)) ? (x) : (y))
+#define MAX(x, y) (((x) >= (y)) ? (x) : (y))
+
 // config =====================================================================
 
 #define TAG STR([IMAGE]) " "
@@ -18,7 +21,7 @@
 #define ASSERT(condition) \
     do { \
         if (!(condition)) { \
-            printf(TAG " Assertion failed: %s:%d\n", \
+            printf(TAG "Assertion failed: %s:%d\n", \
                 __FILE__, __LINE__); \
         } \
     } while (0)
