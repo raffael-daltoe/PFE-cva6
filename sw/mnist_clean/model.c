@@ -53,9 +53,11 @@ void vmacc(size_t vd, size_t vs2, size_t vs1, int32_t imm)
         for (size_t j = 0; j < 4; j++) {
             int32_t mul;
             if (j < imm) {
-                mul = vrf_i8[vs2*V8LEN + j] * vrf_u8[vs1*V8LEN + j];
+                mul = vrf_i8[vs2*V8LEN + i*4 + j] * vrf_u8[vs1*V8LEN + j];
+                // printf("%4d %4d\n", (int) vrf_i8[vs2*V8LEN + 4*i + j], (int) vrf_u8[vs1*V8LEN + 4*i + j]);
             } else {
                 mul = 0;
+                exit(-1);
             }
             vrf_i32[vd*V32LEN + i] += mul;
         }

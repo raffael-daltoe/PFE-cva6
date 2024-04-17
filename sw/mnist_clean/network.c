@@ -88,11 +88,11 @@ static uint8_t l3_out[L3_O_SIZE];
 #define IDX_O(L, OY, OX, ON) \
     (((OY)*L##_OX + (OX))*L##_ON + (ON))
 
-#define IDX_I(L, IY, IX, IN) \
-    (((IY)*L##_IX + (IX))*L##_IN + (IN))
+#define IDX_I(L, IY, IX, IA, IB) \
+    ((((IY)*L##_IX + (IX))*L##_IA + (IA))*L##_IB + (IB))
 
-#define IDX_W(L, WY, WX, INA, ON, INB) \
-    (((((WY)*L##_WX + (WX))*L##_IA + (INA))*L##_ON + (ON))*L##_IB + (INB))
+#define IDX_W(L, WY, WX, IA, ON, IB) \
+    (((((WY)*L##_WX + (WX))*L##_IA + (IA))*L##_ON + (ON))*L##_IB + (IB))
 
 #ifdef SCALAR_RUN
 
@@ -109,13 +109,12 @@ do { \
                 for (size_t wx = 0; wx < L##_WX; wx++) { \
                     size_t ix = L##_SX*ox + wx; \
                     for (size_t ia = 0; ia < L##_IA; ia++) { \
+                        size_t i = IDX_I(L, iy, ix, ia, 0); \
+                        size_t w = IDX_W(L, wy, wx, ia, 0, 0); \
                         for (size_t on = 0; on < L##_ON; on++) { \
                             for (size_t ib = 0; ib < L##_IB; ib++) { \
-                                size_t in = 4*ia + ib; \
-                                if (in < L##_IN) { \
-                                    size_t i = IDX_I(L, iy, ix, in); \
-                                    size_t w = IDX_W(L, wy, wx, ia, on, ib); \
-                                    sum[on] += I[i] * W[w]; \
+                                if (ia*L##_IB + ib < L##_IN) { \
+                                    sum[on] += I[i + ib] * W[w + on*L##_IB + ib]; \
                                 } \
                             } \
                         } \
@@ -134,16 +133,6 @@ do { \
 
 #ifdef MODEL_RUN
 
-#define CONV_LOOP_IN(L, O, I, W, IN_STEP) \
-while(in + IN_STEP <= L##_IN) { \
-    size_t i = (iy*L##_IX + ix)*L##_IN + in; \
-    size_t w = ((on*L##_WY + wy)*L##_WX + wx)*L##_IN + in; \
-    vload(input_vu8, (void *) &I[i], IN_STEP); \
-    vload(weight_vi8, (void *) &W[w], IN_STEP); \
-    vmacc(sum_vi32, weight_vi8, input_vu8, IN_STEP); \
-    in += IN_STEP; \
-}
-
 #define CONV_LOOP_ON(L, O, I, W, ON_STEP) \
 while(on + ON_STEP <= L##_ON) { \
     vbias(sum_vi32, L##_BIAS, ON_STEP); \
@@ -152,16 +141,20 @@ while(on + ON_STEP <= L##_ON) { \
         size_t iy = L##_SY*oy + wy; \
         for (size_t wx = 0; wx < L##_WX; wx++) { \
             size_t ix = L##_SX*ox + wx; \
-            size_t in = 0; \
-            CONV_LOOP_IN(L, O, I, W, 4); \
-            CONV_LOOP_IN(L, O, I, W, 1); \
+            for (size_t ia = 0; ia < L##_IA; ia++) { \
+                size_t i = IDX_I(L, iy, ix, ia, 0); \
+                size_t w = IDX_W(L, wy, wx, ia, on, 0); \
+                vload(weight_vi8, (void *) &W[w], ON_STEP*L##_IB); \
+                vload(input_vu8, (void *) &I[i], L##_IB); \
+                vmacc(sum_vi32, weight_vi8, input_vu8, L##_IB); \
+            } \
         } \
     } \
     vactv(sum_vi32, &O[o], L##_SHIFT, ON_STEP); \
     on += ON_STEP; \
 }
 
-#define CONV(L, O, I, W) \
+#define CONV_M(L, O, I, W) \
 do { \
     size_t sum_vi32 = 1; \
     size_t input_vu8 = 2; \
@@ -214,7 +207,13 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0xa6062dba);
 #endif
 
-    CONV(L1, l1_out, l0_out, l1_weight);
+    // CONV(L1, l1_out, l0_out, l1_weight);
+    // hexdump(l1_out, L1_O_SIZE);
+
+    // printf("\n\n\n");
+
+    CONV_M(L1, l1_out, l0_out, l1_weight);
+    // hexdump(l1_out, L1_O_SIZE);
 
 #ifdef VALIDATION_RUN
     crc = 0;
