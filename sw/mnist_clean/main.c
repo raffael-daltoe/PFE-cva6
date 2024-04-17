@@ -35,7 +35,7 @@ int main() {
     cycles += read_csr(mcycle);
 #endif
 
-    printf(TAG "expected: %d\n", expected);
+    printf(TAG "expected: %ld\n", expected);
     printf(TAG "output: %ld\n", output);
     printf(TAG "credence: %d\n", credence);
 
