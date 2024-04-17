@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "misc.h"
+#include "model.h"
 
 #include "resources/all.h"
 
