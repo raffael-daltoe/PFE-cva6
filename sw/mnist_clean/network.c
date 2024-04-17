@@ -85,11 +85,6 @@ static uint8_t l1_out[L1_O_SIZE];
 static uint8_t l2_out[L2_O_SIZE];
 static uint8_t l3_out[L3_O_SIZE];
 
-static int8_t L0_new[L0_W_SIZE];
-static int8_t L1_new[L1_W_SIZE];
-static int8_t L2_new[L2_W_SIZE];
-static int8_t L3_new[L3_W_SIZE];
-
 #define IDX_O(L, OY, OX, ON) \
     (((OY)*L##_OX + (OX))*L##_ON + (ON))
 
@@ -100,33 +95,6 @@ static int8_t L3_new[L3_W_SIZE];
     (((((WY)*L##_WX + (WX))*L##_IA + (INA))*L##_ON + (ON))*L##_IB + (INB))
 
 #ifdef SCALAR_RUN
-
-#define OLD_CONV(L, O, I, W) \
-do { \
-    for (size_t oy = 0; oy < L##_OY; oy++) { \
-        for (size_t ox = 0; ox < L##_OX; ox++) { \
-            for (size_t wy = 0; wy < L##_WY; wy++) { \
-                size_t iy = L##_SY*oy + wy; \
-                for (size_t wx = 0; wx < L##_WX; wx++) { \
-                    size_t ix = L##_SX*ox + wx; \
-                    for (size_t ina = 0; ina < L##_IA; ina++) { \
-                        for (size_t on = 0; on < L##_ON; on++) { \
-                            for (size_t inb = 0; inb < L##_IB; inb++) { \
-                                size_t in = 4*ina + inb; \
-                                if (in < L##_IN) { \
-                                    size_t i = IDX_I(L, iy, ix, in); \
-                                    size_t w = ((on*L##_WY + wy)*L##_WX + wx)*L##_IN + in; \
-                                    size_t n = IDX_W(L, wy, wx, ina, on, inb); \
-                                    L##_new[n] = W[w]; \
-                                } \
-                            } \
-                        } \
-                    } \
-                } \
-            } \
-        } \
-    } \
-} while(0)
 
 #define CONV(L, O, I, W) \
 do { \
@@ -238,11 +206,7 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0x4dfde263);
 #endif
 
-    OLD_CONV(L0, l0_out, input, l0_weight);
-    CONV(L0, l0_out, input, L0_new);
-
-    // printf("L0_new\n");
-    // hexdump(L0_new, sizeof(L0_new));
+    CONV(L0, l0_out, input, l0_weight);
 
 #ifdef VALIDATION_RUN
     crc = 0;
@@ -250,11 +214,7 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0xa6062dba);
 #endif
 
-    OLD_CONV(L1, l1_out, l0_out, l1_weight);
-    CONV(L1, l1_out, l0_out, L1_new);
-
-    // printf("L1_new\n");
-    // hexdump(L1_new, sizeof(L1_new));
+    CONV(L1, l1_out, l0_out, l1_weight);
 
 #ifdef VALIDATION_RUN
     crc = 0;
@@ -262,11 +222,7 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0x0aa1524f);
 #endif
 
-    OLD_CONV(L2, l2_out, l1_out, l2_weight);
-    CONV(L2, l2_out, l1_out, L2_new);
-
-    // printf("L2_new\n");
-    // hexdump(L2_new, sizeof(L2_new));
+    CONV(L2, l2_out, l1_out, l2_weight);
 
 #ifdef VALIDATION_RUN
     crc = 0;
@@ -274,11 +230,7 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0x7e1d772e);
 #endif
 
-    OLD_CONV(L3, l3_out, l2_out, l3_weight);
-    CONV(L3, l3_out, l2_out, L3_new);
-
-    // printf("L3_new\n");
-    // hexdump(L3_new, sizeof(L3_new));
+    CONV(L3, l3_out, l2_out, l3_weight);
 
 #ifdef VALIDATION_RUN
     crc = 0;
