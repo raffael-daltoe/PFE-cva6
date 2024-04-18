@@ -96,9 +96,13 @@ static uint8_t l3_out[L3_O_SIZE];
 
 #ifdef VECTOR
 
+#define S_VI32 1 // Sum
+#define I_VU8  2 // Input
+#define W_VI8  3 // Weight
+
 #define CONV_LOOP_ON(L, O, I, W, ON_STEP) \
 while(on + ON_STEP <= L##_ON) { \
-    vbias(sum_vi32, L##_BIAS, ON_STEP); \
+    VBIAS(S_VI32, L##_BIAS, ON_STEP); \
     size_t o = (oy*L##_OX + ox)*L##_ON + on; \
     for (size_t wy = 0; wy < L##_WY; wy++) { \
         size_t iy = L##_SY*oy + wy; \
@@ -107,21 +111,18 @@ while(on + ON_STEP <= L##_ON) { \
             for (size_t ia = 0; ia < L##_IA; ia++) { \
                 size_t i = IDX_I(L, iy, ix, ia, 0); \
                 size_t w = IDX_W(L, wy, wx, ia, on, 0); \
-                vload(weight_vi8, (void *) &W[w], ON_STEP*L##_IB); \
-                vload(input_vu8, (void *) &I[i], L##_IB); \
-                vmacc(sum_vi32, weight_vi8, input_vu8, L##_IB); \
+                VLOAD(W_VI8, (void *) &W[w], ON_STEP*L##_IB); \
+                VLOAD(I_VU8, (void *) &I[i], L##_IB); \
+                VMACC(S_VI32, W_VI8, I_VU8, L##_IB); \
             } \
         } \
     } \
-    vactv(sum_vi32, &O[o], L##_SHIFT, ON_STEP); \
+    VACTV(S_VI32, &O[o], L##_SHIFT, ON_STEP); \
     on += ON_STEP; \
 }
 
 #define CONV(L, O, I, W) \
 do { \
-    size_t sum_vi32 = 1; \
-    size_t input_vu8 = 2; \
-    size_t weight_vi8 = 3; \
     for (size_t oy = 0; oy < L##_OY; oy++) { \
         for (size_t ox = 0; ox < L##_OX; ox++) { \
             size_t on = 0; \

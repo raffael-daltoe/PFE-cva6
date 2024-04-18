@@ -1,4 +1,6 @@
-#include "model.h"
+#include "xadac.h"
+
+#ifdef MODEL
 
 static uint8_t vrf[VNUM*V8LEN];
 
@@ -36,7 +38,7 @@ void vbias(size_t vd, int32_t rs1, int32_t imm)
     }
 }
 
-void vmacc(size_t vd, size_t vs2, size_t vs1, int32_t imm)
+void vmacc(size_t vd, size_t vs1, size_t vs2, int32_t imm)
 {
 
 #ifdef VALIDATION_RUN
@@ -46,12 +48,12 @@ void vmacc(size_t vd, size_t vs2, size_t vs1, int32_t imm)
     for (size_t i = 0; i < V32LEN; i++) {
         for (size_t j = 0; j < imm; j++) {
             vrf_i32[vd*V32LEN + i] +=
-                vrf_i8[vs2*V8LEN + i*imm + j] * vrf_u8[vs1*V8LEN + i*imm + j];
+                vrf_i8[vs1*V8LEN + i*imm + j] * vrf_u8[vs2*V8LEN + i*imm + j];
         }
     }
 }
 
-void vactv(size_t vs2, void *rs1, int32_t rs2, int32_t imm)
+void vactv(size_t vs3, void *rs1, int32_t rs2, int32_t imm)
 {
 
 #ifdef VALIDATION_RUN
@@ -62,9 +64,11 @@ void vactv(size_t vs2, void *rs1, int32_t rs2, int32_t imm)
 
     for (size_t i = 0; i < V32LEN; i++) {
         if (i < imm) {
-            int32_t sum = vrf_i32[vs2*V32LEN + i];
+            int32_t sum = vrf_i32[vs3*V32LEN + i];
             sum = (sum > 0) ? (sum >> rs2) : 0;
             ptr[i] = (uint8_t) sum;
         }
     }
 }
+
+#endif
