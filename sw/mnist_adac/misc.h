@@ -6,22 +6,17 @@
 
 #include "config.h"
 
-#define STR_(x) #x
-#define STR(x) STR_(x)
-
 #define MIN(x, y) (((x) <= (y)) ? (x) : (y))
 #define MAX(x, y) (((x) >= (y)) ? (x) : (y))
-
-// config =====================================================================
-
-#define TAG STR([IMAGE]) " "
+#define STR_(x) #x
+#define STR(x) STR_(x)
 
 // assert =====================================================================
 
 #define ASSERT(condition) \
 do { \
     if (!(condition)) { \
-        printf(TAG "Assertion failed: %s:%d\n", \
+        printf("Assertion failed: %s:%d\n", \
             __FILE__, __LINE__); \
     } \
 } while (0)
@@ -60,6 +55,10 @@ do { \
     asm volatile ("csrrc %0, " #reg ", %1" : "=r"(__tmp) : "rK"(bit)); \
     __tmp; \
 }))
+
+// config =====================================================================
+
+void print_config(void);
 
 // crc32 ======================================================================
 

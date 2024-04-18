@@ -7,15 +7,13 @@
 #include "perf.h"
 #include "resources.h"
 
-int main() {
-
-#ifdef VALIDATE
-    printf(TAG "Validation Run\n");
-#endif
+int main()
+{
+    print_config();
 
     uint8_t *input;
     int32_t expected;
-    decode_img(img0003, (void **) &input, &expected);
+    decode_img(IMAGE, (void **) &input, &expected);
 
 #ifdef GLOBAL_PERF
     perf_tic();
@@ -29,7 +27,8 @@ int main() {
     perf_toc();
 #endif
 
-    printf(TAG "expected: %ld\n", expected);
-    printf(TAG "output: %ld\n", output);
-    printf(TAG "credence: %d\n", credence);
+    printf("expected: %ld\n", expected);
+    printf("output: %ld\n", output);
+    printf("credence: %d\n", credence);
+    printf("end\n");
 }

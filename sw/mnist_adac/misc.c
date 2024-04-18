@@ -1,10 +1,37 @@
 #include "misc.h"
 
+// config =====================================================================
+
+void print_config(void)
+{
+    printf("Current Configuration:\n");
+    printf("   IMAGE = " STR(IMAGE) "\n");
+#ifdef GLOBAL_PERF
+    printf("   GLOBAL_PERF\n");
+#endif
+#ifdef LAYER_PERF
+    printf("   LAYER_PERF\n");
+#endif
+#ifdef ADAC_HPM
+    printf("   ADAC_HPM\n");
+#endif
+#ifdef VALIDATE
+    printf("   VALIDATE\n");
+#endif
+#ifdef VECTOR
+    printf("   VECTOR\n");
+#endif
+#ifdef MODEL
+    printf("   MODEL\n");
+#endif
+    printf("\n");
+}
+
 // crc32 ======================================================================
 
 static uint32_t crc32_table[256];
 
-void crc32_table_init(void) 
+void crc32_table_init(void)
 {
     for(size_t i = 0; i < 256; i++) {
         uint32_t ch = i;
