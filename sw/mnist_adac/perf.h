@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "encoding.h"
+#include "config.h"
+#include "misc.h"
 
 void perf_init();
 void perf_tic();
