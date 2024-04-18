@@ -1,0 +1,23 @@
+# rv_xadac
+
+xadac.vload vd rs1 funct7 24..20=0 14..12=0 6..2=0x1D 1..0=3
+# vd: u8/i8
+# rs1: address
+# funct7: vector length in bytes (u7)
+
+xadac.vbias vd rs1 funct7 24..20=0 14..12=1 6..2=0x1D 1..0=3
+# vd: i32
+# rs1: i32
+# funct7: vector length in bytes (u7)
+
+xadac.vmacc vd vs2 vs1 funct7 14..12=2 6..2=0x1D 1..0=3
+# vd: i32
+# vs2: i8
+# vs1: u8
+# funct7: MACCs per output
+
+xadac.vactv vs3 rs1 rs2 funct7 14..12=3 6..2=0x1D 1..0=3
+# vs3: i32
+# rs1: address
+# rs2: shift amount
+# funct7: vector length in bytes (u7)

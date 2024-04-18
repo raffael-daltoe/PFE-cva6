@@ -1,23 +1,23 @@
-From 755a46160a4af3c6d4327217fb18914e1eff835b Mon Sep 17 00:00:00 2001
+From 055107f5108d05e1c4c96b1c7680c511230be15c Mon Sep 17 00:00:00 2001
 From: alencar-felipe <alencar.felipe.paiva@gmail.com>
-Date: Wed, 20 Dec 2023 16:59:22 +0100
+Date: Thu, 18 Apr 2024 16:05:43 +0200
 Subject: [PATCH] xadac extension
 
 ---
  bfd/elfxx-riscv.c          | 11 +++++++++++
- include/opcode/riscv-opc.h |  5 +++++
+ include/opcode/riscv-opc.h | 14 ++++++++++++++
  include/opcode/riscv.h     |  1 +
- opcodes/riscv-opc.c        |  3 +++
- 4 files changed, 20 insertions(+)
+ opcodes/riscv-opc.c        |  6 ++++++
+ 4 files changed, 32 insertions(+)
 
 diff --git a/bfd/elfxx-riscv.c b/bfd/elfxx-riscv.c
-index 19391d94..639518d6 100644
+index 19391d94..c062969d 100644
 --- a/bfd/elfxx-riscv.c
 +++ b/bfd/elfxx-riscv.c
 @@ -1258,6 +1258,12 @@ static struct riscv_supported_ext riscv_supported_vendor_x_ext[] =
    {NULL, 0, 0, 0, 0}
  };
- 
+
 +static struct riscv_supported_ext riscv_supported_vendor_xadac_ext[] =
 +{
 +  {"xadac", ISA_SPEC_CLASS_DRAFT, 0, 0, 0},
@@ -34,7 +34,7 @@ index 19391d94..639518d6 100644
 +  riscv_supported_vendor_xadac_ext,
    NULL
  };
- 
+
 @@ -2383,6 +2390,8 @@ riscv_multi_subset_supports (riscv_parse_subset_t *rps,
        return riscv_subset_supports (rps, "xtheadmempair");
      case INSN_CLASS_XTHEADSYNC:
@@ -54,30 +54,39 @@ index 19391d94..639518d6 100644
        rps->error_handler
          (_("internal: unreachable INSN_CLASS_*"));
 diff --git a/include/opcode/riscv-opc.h b/include/opcode/riscv-opc.h
-index 85d35c1e..a5fab188 100644
+index 85d35c1e..1ce48fad 100644
 --- a/include/opcode/riscv-opc.h
 +++ b/include/opcode/riscv-opc.h
-@@ -2342,6 +2342,9 @@
+@@ -2342,6 +2342,15 @@
  #define MASK_TH_SYNC_IS 0xffffffff
  #define MATCH_TH_SYNC_S 0x0190000b
  #define MASK_TH_SYNC_S 0xffffffff
 +/* Vendor-specific XADAC instructions.  */
-+#define MATCH_XADAC_MAX 0x2b
-+#define MASK_XADAC_MAX 0xfe00707f
++#define MATCH_XADAC_VACTV 0x3077
++#define MASK_XADAC_VACTV 0x707f
++#define MATCH_XADAC_VBIAS 0x1077
++#define MASK_XADAC_VBIAS 0x1f0707f
++#define MATCH_XADAC_VLOAD 0x77
++#define MASK_XADAC_VLOAD 0x1f0707f
++#define MATCH_XADAC_VMACC 0x2077
++#define MASK_XADAC_VMACC 0x707f
  /* Unprivileged Counter/Timers CSR addresses.  */
  #define CSR_CYCLE 0xc00
  #define CSR_TIME 0xc01
-@@ -3236,6 +3239,8 @@ DECLARE_INSN(th_sync, MATCH_TH_SYNC, MASK_TH_SYNC)
+@@ -3236,6 +3245,11 @@ DECLARE_INSN(th_sync, MATCH_TH_SYNC, MASK_TH_SYNC)
  DECLARE_INSN(th_sync_i, MATCH_TH_SYNC_I, MASK_TH_SYNC_I)
  DECLARE_INSN(th_sync_is, MATCH_TH_SYNC_IS, MASK_TH_SYNC_IS)
  DECLARE_INSN(th_sync_s, MATCH_TH_SYNC_S, MASK_TH_SYNC_S)
 +/* Vendor-specific XADAC instructions.  */
-+DECLARE_INSN(xadac_max, MATCH_XADAC_MAX, MASK_XADAC_MAX)
++DECLARE_INSN(xadac_vactv, MATCH_XADAC_VACTV, MASK_XADAC_VACTV)
++DECLARE_INSN(xadac_vbias, MATCH_XADAC_VBIAS, MASK_XADAC_VBIAS)
++DECLARE_INSN(xadac_vload, MATCH_XADAC_VLOAD, MASK_XADAC_VLOAD)
++DECLARE_INSN(xadac_vmacc, MATCH_XADAC_VMACC, MASK_XADAC_VMACC)
  #endif /* DECLARE_INSN */
  #ifdef DECLARE_CSR
  /* Unprivileged Counter/Timers CSRs.  */
 diff --git a/include/opcode/riscv.h b/include/opcode/riscv.h
-index b4ae5524..3febdde1 100644
+index b4ae5524..7e75e636 100644
 --- a/include/opcode/riscv.h
 +++ b/include/opcode/riscv.h
 @@ -422,6 +422,7 @@ enum riscv_insn_class
@@ -86,22 +95,24 @@ index b4ae5524..3febdde1 100644
    INSN_CLASS_XTHEADSYNC,
 +  INSN_CLASS_XADAC
  };
- 
+
  /* This structure holds information for a particular instruction.  */
 diff --git a/opcodes/riscv-opc.c b/opcodes/riscv-opc.c
-index 6b65296a..a60487bb 100644
+index 6b65296a..586dd6d6 100644
 --- a/opcodes/riscv-opc.c
 +++ b/opcodes/riscv-opc.c
-@@ -2009,6 +2009,9 @@ const struct riscv_opcode riscv_opcodes[] =
+@@ -2009,6 +2009,12 @@ const struct riscv_opcode riscv_opcodes[] =
  {"th.sync.is",       0, INSN_CLASS_XTHEADSYNC,  "",   MATCH_TH_SYNC_IS,       MASK_TH_SYNC_IS,       match_opcode, 0},
  {"th.sync.s",        0, INSN_CLASS_XTHEADSYNC,  "",   MATCH_TH_SYNC_S,        MASK_TH_SYNC_S,        match_opcode, 0},
- 
+
 +/* Vendor-specific XADAC instructions. */
-+{"xadac.max", 0, INSN_CLASS_XADAC, "d,s,t", MATCH_XADAC_MAX, MASK_XADAC_MAX, match_opcode, 0},
++{"xadac.vactv", 0, INSN_CLASS_XADAC, "Xu5@7,s,t,Xu7@25"          , MATCH_XADAC_VACTV, MASK_XADAC_VACTV, match_opcode, 0},
++{"xadac.vbias", 0, INSN_CLASS_XADAC, "Xu5@7,s,Xu7@25"            , MATCH_XADAC_VBIAS, MASK_XADAC_VBIAS, match_opcode, 0},
++{"xadac.vload", 0, INSN_CLASS_XADAC, "Xu5@7,s,Xu7@25"            , MATCH_XADAC_VLOAD, MASK_XADAC_VLOAD, match_opcode, 0},
++{"xadac.vmacc", 0, INSN_CLASS_XADAC, "Xu5@7,Xu5@15,Xu5@20,Xu7@25", MATCH_XADAC_VMACC, MASK_XADAC_VMACC, match_opcode, 0},
 +
  /* Terminate the list.  */
  {0, 0, INSN_CLASS_NONE, 0, 0, 0, 0, 0}
  };
--- 
-2.30.2
-
+--
+2.34.1
