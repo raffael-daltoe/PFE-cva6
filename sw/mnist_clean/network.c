@@ -94,44 +94,7 @@ static uint8_t l3_out[L3_O_SIZE];
 #define IDX_W(L, WY, WX, IA, ON, IB) \
     (((((WY)*L##_WX + (WX))*L##_IA + (IA))*L##_ON + (ON))*L##_IB + (IB))
 
-#ifdef SCALAR_RUN
-
-#define CONV(L, O, I, W) \
-do { \
-    for (size_t oy = 0; oy < L##_OY; oy++) { \
-        for (size_t ox = 0; ox < L##_OX; ox++) { \
-            int32_t sum[L##_ON]; \
-            for (size_t on = 0; on < L##_ON; on++) { \
-                sum[on] = L##_BIAS; \
-            } \
-            for (size_t wy = 0; wy < L##_WY; wy++) { \
-                size_t iy = L##_SY*oy + wy; \
-                for (size_t wx = 0; wx < L##_WX; wx++) { \
-                    size_t ix = L##_SX*ox + wx; \
-                    for (size_t ia = 0; ia < L##_IA; ia++) { \
-                        size_t i = IDX_I(L, iy, ix, ia, 0); \
-                        size_t w = IDX_W(L, wy, wx, ia, 0, 0); \
-                        for (size_t on = 0; on < L##_ON; on++) { \
-                            for (size_t ib = 0; ib < L##_IB; ib++) { \
-                                if (ia*L##_IB + ib < L##_IN) { \
-                                    sum[on] += I[i + ib] * W[w + on*L##_IB + ib]; \
-                                } \
-                            } \
-                        } \
-                    } \
-                } \
-            } \
-            for (size_t on = 0; on < L##_ON; on++) { \
-                size_t o = IDX_O(L, oy, ox, on); \
-                O[o] = (uint8_t) (sum[on] > 0) ? (sum[on] >> L##_SHIFT) : 0; \
-            } \
-        } \
-    } \
-} while(0)
-
-#endif
-
-#ifdef MODEL_RUN
+#ifdef VECTOR
 
 #define CONV_LOOP_ON(L, O, I, W, ON_STEP) \
 while(on + ON_STEP <= L##_ON) { \
@@ -168,6 +131,41 @@ do { \
     } \
 } while(0)
 
+#else
+
+#define CONV(L, O, I, W) \
+do { \
+    for (size_t oy = 0; oy < L##_OY; oy++) { \
+        for (size_t ox = 0; ox < L##_OX; ox++) { \
+            int32_t sum[L##_ON]; \
+            for (size_t on = 0; on < L##_ON; on++) { \
+                sum[on] = L##_BIAS; \
+            } \
+            for (size_t wy = 0; wy < L##_WY; wy++) { \
+                size_t iy = L##_SY*oy + wy; \
+                for (size_t wx = 0; wx < L##_WX; wx++) { \
+                    size_t ix = L##_SX*ox + wx; \
+                    for (size_t ia = 0; ia < L##_IA; ia++) { \
+                        size_t i = IDX_I(L, iy, ix, ia, 0); \
+                        size_t w = IDX_W(L, wy, wx, ia, 0, 0); \
+                        for (size_t on = 0; on < L##_ON; on++) { \
+                            for (size_t ib = 0; ib < L##_IB; ib++) { \
+                                if (ia*L##_IB + ib < L##_IN) { \
+                                    sum[on] += I[i + ib] * W[w + on*L##_IB + ib]; \
+                                } \
+                            } \
+                        } \
+                    } \
+                } \
+            } \
+            for (size_t on = 0; on < L##_ON; on++) { \
+                size_t o = IDX_O(L, oy, ox, on); \
+                O[o] = (uint8_t) (sum[on] > 0) ? (sum[on] >> L##_SHIFT) : 0; \
+            } \
+        } \
+    } \
+} while(0)
+
 #endif
 
 static void argmax(
@@ -190,7 +188,7 @@ static void argmax(
 void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
 {
 
-#ifdef VALIDATION_RUN
+#ifdef VALIDATE
     uint32_t crc;
     crc32_table_init();
 
@@ -199,33 +197,69 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0x4dfde263);
 #endif
 
+#ifdef LAYER_PERF
+    printf("L0\n");
+    perf_tic();
+#endif
+
     CONV(L0, l0_out, input, l0_weight);
 
-#ifdef VALIDATION_RUN
+#ifdef LAYER_PERF
+    perf_toc();
+#endif
+
+#ifdef VALIDATE
     crc = 0;
     crc32(&crc, l0_out, L0_O_SIZE);
     ASSERT(crc == 0xa6062dba);
 #endif
 
+#ifdef LAYER_PERF
+    printf("L1\n");
+    perf_tic();
+#endif
+
     CONV(L1, l1_out, l0_out, l1_weight);
 
-#ifdef VALIDATION_RUN
+#ifdef LAYER_PERF
+    perf_toc();
+#endif
+
+#ifdef VALIDATE
     crc = 0;
     crc32(&crc, l1_out, L1_O_SIZE);
     ASSERT(crc == 0x0aa1524f);
 #endif
 
+#ifdef LAYER_PERF
+    printf("L2\n");
+    perf_tic();
+#endif
+
     CONV(L2, l2_out, l1_out, l2_weight);
 
-#ifdef VALIDATION_RUN
+#ifdef LAYER_PERF
+    perf_toc();
+#endif
+
+#ifdef VALIDATE
     crc = 0;
     crc32(&crc, l2_out, L2_O_SIZE);
     ASSERT(crc == 0x7e1d772e);
 #endif
 
+#ifdef LAYER_PERF
+    printf("L3\n");
+    perf_tic();
+#endif
+
     CONV(L3, l3_out, l2_out, l3_weight);
 
-#ifdef VALIDATION_RUN
+#ifdef LAYER_PERF
+    perf_toc();
+#endif
+
+#ifdef VALIDATE
     crc = 0;
     crc32(&crc, l3_out, L3_O_SIZE);
     ASSERT(crc == 0x6d779679);
@@ -233,7 +267,7 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
 
     argmax(output, credence, l3_out, L3_O_SIZE);
 
-#ifdef VALIDATION_RUN
+#ifdef VALIDATE
     crc = 0;
     crc32(&crc, output, 1);
     ASSERT(crc == 0xd56f2b94);

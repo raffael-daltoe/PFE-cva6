@@ -4,15 +4,12 @@
 #include <stdint.h>
 
 #include "network.h"
+#include "perf.h"
 #include "resources/all.h"
 
 int main() {
 
-#ifdef PERFORMANCE_RUN
-    printf(TAG "Performance Run\n");
-#endif
-
-#ifdef VALIDATION_RUN
+#ifdef VALIDATE
     printf(TAG "Validation Run\n");
 #endif
 
@@ -20,28 +17,19 @@ int main() {
     int32_t expected;
     decode_img(img0003, (void **) &input, &expected);
 
-#ifdef PERFORMANCE_RUN
-    size_t instret, cycles;
-    instret = -read_csr(minstret);
-    cycles = -read_csr(mcycle);
+#ifdef GLOBAL_PERF
+    perf_tic();
 #endif
 
     int32_t output;
     uint8_t credence;
     inference(input, &output, &credence);
 
-#ifdef PERFORMANCE_RUN
-    instret += read_csr(minstret);
-    cycles += read_csr(mcycle);
+#ifdef GLOBAL_PERF
+    perf_toc();
 #endif
 
     printf(TAG "expected: %ld\n", expected);
     printf(TAG "output: %ld\n", output);
     printf(TAG "credence: %d\n", credence);
-
-#ifdef PERFORMANCE_RUN
-    printf(TAG "instrutions: %ld\n", instret);
-    printf(TAG "cycles: %ld\n", cycles);
-#endif
-
 }

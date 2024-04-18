@@ -1,7 +1,5 @@
 #include "model.h"
 
-#ifdef MODEL_RUN
-
 static uint8_t vrf[VNUM*V8LEN];
 
 static int32_t *vrf_i32 = (int32_t *) vrf;
@@ -70,5 +68,3 @@ void vactv(size_t vs2, void *rs1, int32_t rs2, int32_t imm)
         }
     }
 }
-
-#endif
