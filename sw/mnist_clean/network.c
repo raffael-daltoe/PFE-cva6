@@ -151,7 +151,7 @@ do { \
                         for (size_t on = 0; on < L##_ON; on++) { \
                             for (size_t ib = 0; ib < L##_IB; ib++) { \
                                 if (ia*L##_IB + ib < L##_IN) { \
-                                    sum[on] += I[i + ib] * W[w + on*L##_IB + ib]; \
+                                    sum[on] += (I)[i + ib] * (W)[w + on*L##_IB + ib]; \
                                 } \
                             } \
                         } \
@@ -160,7 +160,7 @@ do { \
             } \
             for (size_t on = 0; on < L##_ON; on++) { \
                 size_t o = IDX_O(L, oy, ox, on); \
-                O[o] = (uint8_t) (sum[on] > 0) ? (sum[on] >> L##_SHIFT) : 0; \
+                (O)[o] = (uint8_t) (sum[on] > 0) ? (sum[on] >> L##_SHIFT) : 0; \
             } \
         } \
     } \

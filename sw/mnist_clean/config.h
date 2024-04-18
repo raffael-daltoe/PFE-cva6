@@ -4,8 +4,8 @@
 // #define LAYER_PERF
 #define ADAC_HPM
 #define VALIDATE
-#define VECTOR
-#define MODEL
+// #define VECTOR
+// #define MODEL
 
 #ifndef IMAGE
     #define IMAGE img0003

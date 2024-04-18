@@ -5,7 +5,7 @@
 
 #include "network.h"
 #include "perf.h"
-#include "resources/all.h"
+#include "resources.h"
 
 int main() {
 

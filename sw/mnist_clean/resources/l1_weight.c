@@ -1,8 +1,6 @@
-#pragma once
-
 #include <stdint.h>
 
-static const uint32_t l1_weight_data[] = {
+const uint32_t l1_weight[] = {
     0x00000605, 0x00e90100, 0x03050000, 0xe4000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -1204,5 +1202,3 @@ static const uint32_t l1_weight_data[] = {
     // 0x03f8fcfe, 0x0f0108ff, 0xf0040409, 0xfafc09fa,
     // 0x11030702, 0x06060d0f, 0xfafe060f, 0xf8ff0e05,
 };
-
-static const int8_t *l1_weight = (int8_t *) l1_weight_data;

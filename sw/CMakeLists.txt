@@ -18,26 +18,30 @@ set(CMAKE_PK /opt/riscv/${GCC_PREFIX}/bin/pk)
 set(CMAKE_BIN2MEM ${PROJECT_SOURCE_DIR}/../util/bin2mem.py)
 set(CMAKE_MEM2COE ${PROJECT_SOURCE_DIR}/../util/mem2coe.py)
 
-set(COMMON_FLAGS " \
-    -march=rv32im_zicsr_xadac1 -mabi=ilp32 -g -O3 -mcmodel=medany \
-    -DPREALLOCATE=1 -DSTDIO_THRU_UART \
-    -fvisibility=hidden -static -Wall -pedantic")
+set(COMMON_FLAGS "-g -O3 -static \
+    -march=rv32im_zicsr_xadac1 -mabi=ilp32 -mcmodel=medany \
+    -fvisibility=hidden -ffunction-sections -fdata-sections")
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   ${COMMON_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${COMMON_FLAGS}")
 
 set(CVA6_LINK_SCRIPT "${CMAKE_SOURCE_DIR}/cva6/link.ld")
 include_directories(${PROJECT_SOURCE_DIR}/cva6)
-file(GLOB CVA6_SOURCES 
+file(GLOB_RECURSE CVA6_SOURCES
     "${PROJECT_SOURCE_DIR}/cva6/*.S"
     "${PROJECT_SOURCE_DIR}/cva6/*.c")
+add_library(cva6 STATIC ${CVA6_SOURCES})
+target_compile_options(cva6 PRIVATE -DPREALLOCATE=1 -DSTDIO_THRU_UART -w)
 
 function(add_benchmark NAME)
-    file(GLOB BM_SOURCES "${PROJECT_SOURCE_DIR}/${NAME}/*.c")
-    
-    add_executable(${NAME} ${BM_SOURCES} ${CVA6_SOURCES})
+    file(GLOB_RECURSE BM_SOURCES "${PROJECT_SOURCE_DIR}/${NAME}/*.c")
+
+    add_executable(${NAME} ${BM_SOURCES})
+    target_link_libraries(${NAME} cva6)
+    target_compile_options(${NAME} PRIVATE -Wall -pedantic)
     set_target_properties(${NAME} PROPERTIES LINK_FLAGS
-        "-static -nostartfiles -T ${CVA6_LINK_SCRIPT} -Wl,-Map=${NAME}.map")
+        "-static -nostartfiles -T ${CVA6_LINK_SCRIPT} \
+        -Wl,-gc-sections,-u,main,-Map=${NAME}.map")
     add_custom_command(TARGET ${NAME} POST_BUILD
         COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:${NAME}> > ${NAME}.dump
         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${NAME}> ${NAME}.bin
@@ -45,6 +49,9 @@ function(add_benchmark NAME)
         COMMAND ${CMAKE_MEM2COE} ${NAME}.mem)
 
     add_executable(${NAME}_pk ${BM_SOURCES})
+    target_compile_options(${NAME}_pk PRIVATE -Wall -pedantic)
+    set_target_properties(${NAME}_pk PROPERTIES LINK_FLAGS
+        "-Wl,-gc-sections,-u,main,-Map=${NAME}_pk.map")
     add_custom_command(TARGET ${NAME}_pk POST_BUILD
         COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:${NAME}_pk> > ${NAME}_pk.dump)
 
