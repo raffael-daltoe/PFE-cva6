@@ -1,11 +1,11 @@
 #pragma once
 
-// #define GLOBAL_PERF
+#define GLOBAL_PERF
 // #define LAYER_PERF
 // #define ADAC_HPM
-#define VALIDATE
+// #define VALIDATE
 #define VECTOR
-#define MODEL
+// #define MODEL
 
 #ifndef IMAGE
     #define IMAGE img0003

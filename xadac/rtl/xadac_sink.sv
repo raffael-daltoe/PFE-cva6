@@ -1,4 +1,4 @@
-module xadac_vbias
+module xadac_sink
     import xadac_pkg::*;
 (
     input logic  clk,
@@ -12,29 +12,20 @@ module xadac_vbias
 
         slv.dec_rsp.id = slv.dec_req.id;
         slv.dec_rsp.rd_clobber = '0;
-        slv.dec_rsp.vd_clobber = '1;
-        slv.dec_rsp.rs_read[0] = '1;
+        slv.dec_rsp.vd_clobber = '0;
+        slv.dec_rsp.rs_read[0] = '0;
         slv.dec_rsp.rs_read[1] = '0;
         slv.dec_rsp.vs_read[0] = '0;
         slv.dec_rsp.vs_read[1] = '0;
         slv.dec_rsp.vs_read[2] = '0;
-        slv.dec_rsp.accept = '1;
+        slv.dec_rsp.accept = '0;
     end
 
     always_comb begin : comb_exe
-        automatic VecLenT vlen;
-
-        vlen = slv.exe_req.instr[25 +: VecLenWidth];
-
-        slv.exe_rsp_valid = slv.exe_req_valid;
-        slv.exe_req_ready = (slv.exe_rsp_valid && slv.exe_rsp_ready);
+        slv.exe_req_ready = '0;
 
         slv.exe_rsp    = '0;
-        slv.exe_rsp.id = slv.exe_req_id;
-        for (VecLenT i = 0; i < vlen; i++) begin
-            slv.exe_rsp.vd[SumWidth*i +: SumWidth] =
-                SumT'(slv.exe_req.rs_data[0]);
-        end
+        slv.exe_rsp_valid = '0;
     end
 
 endmodule

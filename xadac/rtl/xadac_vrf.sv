@@ -19,19 +19,19 @@ module xadac_vrf
 
     // vf phy =================================================================
 
-    RegIdT  [NoVs-1:0] phy_rid;
-    VectorT [NoVs-1:0] phy_rdata;
-    RegIdT             phy_wid;
-    VectorT            phy_wdata;
-    logic              phy_we;
+    VecAddrT [NoVs-1:0] phy_raddr;
+    VecDataT [NoVs-1:0] phy_rdata;
+    VecAddrT            phy_waddr;
+    VecDataT            phy_wdata;
+    logic               phy_we;
 
     xadac_vrf_phy i_phy (
         .clk  (clk),
         .rstn (rstn),
 
-        .rid   (phy_rid),
+        .raddr (phy_raddr),
         .rdata (phy_rdata),
-        .wid   (phy_wid),
+        .waddr (phy_waddr),
         .wdata (phy_wdata),
         .we    (phy_we)
     );
@@ -39,7 +39,7 @@ module xadac_vrf
     // exe ====================================================================
 
     always_comb begin : comb_exe_req
-        phy_rid = slv.exe_req.vs_data;
+        phy_raddr = slv.exe_req.vs_addr;
 
         mst.exe_req.id      = slv.exe_req.id;
         mst.exe_req.instr   = slv.exe_req.instr;
@@ -54,12 +54,12 @@ module xadac_vrf
 
     always_comb begin : comb_exe_rsp
         if (mst.exe_rsp_valid && mst.exe_rsp_ready) begin
-            phy_wid   = mst.exe_rsp.vd_id;
-            phy_wdata = mst.exe_rsp.vd;
+            phy_waddr = mst.exe_rsp.vd_addr;
+            phy_wdata = mst.exe_rsp.vd_data;
             phy_we    = mst.exe_rsp.vd_write;
         end
         else begin
-            phy_wid   = '0;
+            phy_waddr = '0;
             phy_wdata = '0;
             phy_we    = '0;
         end

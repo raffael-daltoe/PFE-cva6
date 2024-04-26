@@ -41,7 +41,7 @@ function(add_benchmark NAME)
     target_compile_options(${NAME} PRIVATE -Wall -pedantic)
     set_target_properties(${NAME} PROPERTIES LINK_FLAGS
         "-static -nostartfiles -T ${CVA6_LINK_SCRIPT} \
-        -Wl,-gc-sections,-u,main,-Map=${NAME}.map")
+        -Wl,-gc-sections,-u,_start,-Map=${NAME}.map")
     add_custom_command(TARGET ${NAME} POST_BUILD
         COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:${NAME}> > ${NAME}.dump
         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${NAME}> ${NAME}.bin

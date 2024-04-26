@@ -1,7 +1,5 @@
 package xadac_pkg;
 
-    import obi_pkg::*;
-
     localparam type SizeT = int unsigned;
 
     localparam SizeT NoRs = 2;
@@ -15,14 +13,14 @@ package xadac_pkg;
 
     localparam type AddrT    = logic [AddrWidth-1:0];
     localparam type IdT      = logic [IdWidth-1:0];
-    localparam type InstrT   = logic [InstrT-1:0];
+    localparam type InstrT   = logic [InstrWidth-1:0];
     localparam type RegAddrT = logic [RegAddrWidth-1:0];
     localparam type RegDataT = logic [RegDataWidth-1:0];
 
     localparam SizeT VecAddrWidth = 5;
     localparam SizeT VecDataWidth = 128;
     localparam SizeT VecElemWidth = 8;
-    localparam SizeT VecLenWidth  = $clog(VecDataWidth/VecElemWidth);
+    localparam SizeT VecLenWidth  = $clog2(VecDataWidth/VecElemWidth+1);
     localparam SizeT VecSumWidth  = 32;
     localparam SizeT VecStrbWidth = VecDataWidth/8;
 
@@ -69,13 +67,6 @@ package xadac_pkg;
         VecDataT vd_data;
         logic    vd_write;
     };
-
-    localparam obi_cfg_t ObiCfg = obi_default_cfg(
-        AddrWidth,
-        VectorWidth,
-        IdWidth,
-        ObiMinimalOptionalConfig
-    );
 
     function automatic SizeT min(SizeT a, SizeT b);
         return (a < b) ? a : b;

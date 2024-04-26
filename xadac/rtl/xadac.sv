@@ -7,11 +7,28 @@ module xadac
     AXI_BUS.Master axi
 );
 
-    localparam SizeT NoUnits = 4;
+    localparam SizeT NoUnits = 5;
+
+    localparam InstrT [NoUnits-1:0] Mask = '{
+        32'h0000_0000, // sink
+        32'h0000_3077, // vactv
+        32'h0000_707f, // vmacc
+        32'h01f0_707f, // vbias
+        32'h01f0_707f  // vload
+    };
+
+    localparam InstrT [NoUnits-1:0] Match = '{
+        32'h0000_0000, // sink
+        32'h0000_3077, // vactv
+        32'h0000_2077, // vmacc
+        32'h0000_1077, // vbias
+        32'h0000_0077  // vload
+    };
 
     xadac_if slv_vrf ();
     xadac_if slv_mux ();
-    xadac_if slv_unit [NoUnits] ();
+    xadac_if slv_unit_skid  [NoUnits] ();
+    xadac_if slv_unit       [NoUnits] ();
 
     IdT   axi_aw_id;
     AddrT axi_aw_addr;
@@ -37,6 +54,16 @@ module xadac
     logic    axi_r_valid;
     logic    axi_r_ready;
 
+    logic test_d, test_q;
+
+    always_comb begin
+        test_d = axi_r_valid;
+    end
+
+    always_ff @(posedge clk) begin
+        test_q <= test_d;
+    end
+
     xadac_vclobber i_vclobber (
         .clk  (clk),
         .rstn (rstn),
@@ -53,14 +80,25 @@ module xadac
 
     xadac_mux #(
         .NoMst (NoUnits),
-        .Mask  ('0),
-        .Match ('0)
+        .Mask  (Mask),
+        .Match (Match)
     ) i_mux (
         .clk  (clk),
         .rstn (rstn),
         .slv  (slv_mux),
-        .mst  (slv_unit)
+        .mst  (slv_unit_skid)
     );
+
+    for (genvar i = 0; i < NoUnits; i++) begin : gen_skid
+        xadac_if_skid #(
+            .ExeRspSkid (1)
+        ) i_unit_skid (
+            .clk  (clk),
+            .rstn (rstn),
+            .slv  (slv_unit_skid[i]),
+            .mst  (slv_unit[i])
+        );
+    end
 
     xadac_vload i_vload (
         .clk  (clk),
@@ -104,11 +142,21 @@ module xadac
         .axi_w_strb  (axi_w_strb),
         .axi_w_valid (axi_w_valid),
         .axi_w_ready (axi_w_ready),
+
+        .axi_b_id    (axi_b_id),
+        .axi_b_valid (axi_b_valid),
+        .axi_b_ready (axi_b_ready)
+    );
+
+    xadac_sink i_sink (
+        .clk  (clk),
+        .rstn (rstn),
+        .slv  (slv_unit[4])
     );
 
     // axi assign =============================================================
 
-    localparam int unsigned AxiSize = axi_pkg::size_t'(
+    localparam axi_pkg::size_t AxiSize = axi_pkg::size_t'(
         $unsigned($clog2(VecDataWidth/8))
     );
 

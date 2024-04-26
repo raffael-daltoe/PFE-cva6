@@ -10,10 +10,10 @@ xadac.vbias vd rs1 funct7 24..20=0 14..12=1 6..2=0x1D 1..0=3
 # rs1: i32
 # funct7: vector length in bytes (u7)
 
-xadac.vmacc vd vs2 vs1 funct7 14..12=2 6..2=0x1D 1..0=3
+xadac.vmacc vd vs1 vs2 funct7 14..12=2 6..2=0x1D 1..0=3
 # vd: i32
-# vs2: i8
-# vs1: u8
+# vs1: i8
+# vs2: u8
 # funct7: MACCs per output
 
 xadac.vactv vs3 rs1 rs2 funct7 14..12=3 6..2=0x1D 1..0=3

@@ -13,8 +13,8 @@ module xadac_vclobber
     assign slv.exe_rsp = mst.exe_rsp;
 
     typedef struct packed {
-        RegIdT vd_id;
-        logic  vd_clobber;
+        RegAddrT vd_addr;
+        logic    vd_clobber;
 
         logic [NoVs-1:0] vs_read;
 
@@ -29,10 +29,10 @@ module xadac_vclobber
 
     always_comb begin
         automatic IdT id;
-        automatic RegIdT [NoVs-1:0] vs_id;
+        automatic RegAddrT [NoVs-1:0] vs_addr;
 
-        instr_sb_d = instr_sb_q;
-        reg_sb_d   = reg_sb_q;
+        sb_d      = sb_q;
+        clobber_d = clobber_q;
 
         // dec req ============================================================
 
@@ -46,7 +46,7 @@ module xadac_vclobber
         slv.dec_req_ready = (mst.dec_req_valid && mst.dec_req_ready);
 
         if (slv.dec_req_valid && slv.dec_req_ready) begin
-            sb_d[id].vd_id = slv.dec_req.instr[11:7];
+            sb_d[id].vd_addr = slv.dec_req.instr[11:7];
             sb_d[id].dec_req_done = '1;
         end
 
@@ -56,7 +56,7 @@ module xadac_vclobber
 
         slv.dec_rsp_valid = (
             mst.dec_rsp_valid &&
-            sb_d[id].dec_req_done &&
+            // sb_d[id].dec_req_done &&
             !sb_d[id].dec_rsp_done
         );
 
@@ -64,22 +64,18 @@ module xadac_vclobber
 
         if (mst.dec_rsp_valid && mst.dec_rsp_ready) begin
             sb_d[id].vd_clobber = mst.dec_rsp.vd_clobber;
-            sb_d[id].vs1_read   = mst.dec_rsp.vs1_read;
-            sb_d[id].vs2_read   = mst.dec_rsp.vs2_read;
-            sb_d[id].vs3_read   = mst.dec_rsp.vs3_read;
+            sb_d[id].vs_read    = mst.dec_rsp.vs_read;
             sb_d[id].dec_rsp_done = '1;
-            if (!mst.dec_rsp.accept) entry = '0;
+            if (!mst.dec_rsp.accept) sb_d[id] = '0;
         end
-
-        sb_d[mst.dec_rsp.id] = entry;
 
         // exe req ============================================================
 
         id = slv.exe_req.id;
 
-        vs_id[0] = slv.exe_req.instr[19:15];
-        vs_id[1] = slv.exe_req.instr[24:20];
-        vs_id[2] = slv.exe_req.instr[11: 7];
+        vs_addr[0] = slv.exe_req.instr[19:15];
+        vs_addr[1] = slv.exe_req.instr[24:20];
+        vs_addr[2] = slv.exe_req.instr[11: 7];
 
         mst.exe_req_valid = (
             slv.exe_req_valid &&
@@ -87,20 +83,20 @@ module xadac_vclobber
             !sb_d[id].exe_req_done
         );
 
-        if (sb_d[id].vd_clobber && clobber_d[sb_d[id].vd_id]) begin
-            mst.req_valid = '0;
+        if (sb_d[id].vd_clobber && clobber_d[sb_d[id].vd_addr]) begin
+            mst.exe_req_valid = '0;
         end
 
         for (SizeT i = 0; i < NoVs; i++) begin
-            if (sb_d[id].rsp_vs_read[i] && clobber_d[vs_id[i]]) begin
-                mst.req_valid = '0;
+            if (sb_d[id].vs_read[i] && clobber_d[vs_addr[i]]) begin
+                mst.exe_req_valid = '0;
             end
         end
 
         slv.exe_req_ready = (mst.exe_req_valid && mst.exe_req_ready);
 
         if (slv.exe_req_valid && slv.exe_req_ready) begin
-            if (sb_d[id].vd_clobber) clobber_d[sb_d[id].vd_id] = '1;
+            if (sb_d[id].vd_clobber) clobber_d[sb_d[id].vd_addr] = '1;
             sb_d[id].exe_req_done = '1;
         end
 
@@ -117,7 +113,7 @@ module xadac_vclobber
         mst.exe_rsp_ready = (slv.exe_rsp_valid && slv.exe_rsp_ready);
 
         if (mst.exe_rsp_valid && mst.exe_rsp_ready) begin
-            if (sb_d[id].vd_clobber) clobber_d[sb_d[id].vd_id] = '0;
+            if (sb_d[id].vd_clobber) clobber_d[sb_d[id].vd_addr] = '0;
             sb_d[id].exe_rsp_done = '1;
         end
 

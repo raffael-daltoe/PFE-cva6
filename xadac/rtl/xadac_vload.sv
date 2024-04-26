@@ -20,7 +20,7 @@ module xadac_vload
         AddrT    addr;
         VecAddrT vd_addr;
         VecLenT  vlen;
-        VecDataT rdata;
+        VecDataT data;
         logic    exe_req_done;
         logic    exe_rsp_done;
         logic    axi_ar_done;
@@ -36,10 +36,11 @@ module xadac_vload
     AddrT axi_ar_addr_d;
     logic axi_ar_valid_d;
 
-    logic axi_r_ready_d;
-
     always_comb begin : comb
-        automatic IdT id;
+        automatic IdT      id      = '0;
+        automatic SizeT    i       = '0;
+        automatic SizeT    j       = '0;
+        automatic VecDataT vd_data = '0;
 
         sb_d    = sb_q;
 
@@ -49,8 +50,6 @@ module xadac_vload
         axi_ar_id_d    = axi_ar_id;
         axi_ar_addr_d  = axi_ar_addr;
         axi_ar_valid_d = axi_ar_valid;
-
-        axi_r_ready_d = axi_r_ready;
 
         // dec ================================================================
 
@@ -67,14 +66,14 @@ module xadac_vload
         slv.dec_rsp.vs_read[2] = '0;
         slv.dec_rsp.accept = '1;
 
-        // exe req channel ====================================================
+        // exe req ============================================================
 
         id = slv.exe_req.id;
 
         slv.exe_req_ready = (slv.exe_req_valid && !sb_d[id].exe_req_done);
 
         if (slv.exe_req_valid && slv.exe_req_ready) begin
-            sb_d[id].addr     = AddrT'(slv.req_rs1);
+            sb_d[id].addr     = AddrT'(slv.exe_req.rs_data[0]);
             sb_d[id].vd_addr  = slv.exe_req.instr[11:7];
             sb_d[id].vlen     = slv.exe_req.instr[25 +: VecLenWidth];
             sb_d[id].exe_req_done = '1;
@@ -90,10 +89,11 @@ module xadac_vload
             axi_ar_valid_d = '0;
         end
 
-        for(id = 0; id < SbLen; id++) begin
+        for(i = 0; i < SbLen; i++) begin
+            id = IdT'(i);
             if(
                 !axi_ar_valid_d &&
-                sb_d[id].req_done &&
+                sb_d[id].exe_req_done &&
                 !sb_d[id].axi_ar_done
             ) begin
                 axi_ar_id_d    = id;
@@ -107,6 +107,12 @@ module xadac_vload
 
         id = axi_r_id;
 
+        axi_r_ready = (
+            axi_r_valid &&
+            sb_d[id].axi_ar_done &&
+            !sb_d[id].axi_r_done
+        );
+
         if (axi_r_valid && axi_r_ready) begin
             sb_d[id].data = axi_r_data;
             sb_d[id].axi_r_done = '1;
@@ -114,25 +120,25 @@ module xadac_vload
 
         // exe rsp ============================================================
 
-        id = slv.exe_rsq.id;
+        id = slv.exe_rsp.id;
 
-        if (slv.exe_rsp_valid && obi.exe_rsp_ready) begin
+        if (slv.exe_rsp_valid && slv.exe_rsp_ready) begin
             exe_rsp_d        = '0;
             exe_rsp_valid_d  = '0;
         end
 
-        for(id = 0; id < SbLen; id++) begin
+        for(i = 0; i < SbLen; i++) begin
+            id = IdT'(i);
             if(
                 !exe_rsp_valid_d &&
                 sb_d[id].axi_r_done &&
                 !sb_d[id].exe_rsp_done
             ) begin
-
-                automatic VecDataT vd_data = '0;
-                for (VecLenT i = 0; i < VectorWidth/ElemWidth; i++) begin
-                    automatic VecLenT j = (i % sb_d[id].vlen);
+                vd_data = '0;
+                for (i = 0; i < VecDataWidth/VecElemWidth; i++) begin
+                    j = i % SizeT'(sb_d[id].vlen);
                     vd_data[VecElemWidth*i +: VecElemWidth] =
-                        sb_d[id].rdata[VecElemWidth*j +: VecElemWidth];
+                        sb_d[id].data[VecElemWidth*j +: VecElemWidth];
                 end
 
                 exe_rsp_d          = '0;
@@ -148,7 +154,8 @@ module xadac_vload
 
         // end ================================================================
 
-        for (id = 0; id < SbLen; id++) begin
+        for (i = 0; i < SbLen; i++) begin
+            id = IdT'(i);
             if (
                 sb_d[id].exe_req_done &&
                 sb_d[id].exe_rsp_done &&
@@ -170,11 +177,9 @@ module xadac_vload
             axi_ar_id    <= '0;
             axi_ar_addr  <= '0;
             axi_ar_valid <= '0;
-
-            axi_r_valid <= '0;
         end
         else begin
-            sb_q <= sb_q;
+            sb_q <= sb_d;
 
             slv.exe_rsp       <= exe_rsp_d;
             slv.exe_rsp_valid <= exe_rsp_valid_d;
@@ -182,8 +187,6 @@ module xadac_vload
             axi_ar_id    <= axi_ar_id_d;
             axi_ar_addr  <= axi_ar_addr_d;
             axi_ar_valid <= axi_ar_valid_d;
-
-            axi_r_valid <= axi_r_ready_d;
         end
     end
 

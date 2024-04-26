@@ -7,21 +7,22 @@ module xadac_vrf_phy
     input  VecAddrT [NoVs-1:0] raddr,
     output VecDataT [NoVs-1:0] rdata,
     input  VecAddrT            waddr,
-    input  VecdataT            wdata,
+    input  VecDataT            wdata,
     input  logic               we
 );
 
-    VectorT [NoVec-1:0] vf;
+    VecDataT [NoVec-1:0] vrf;
 
     always_ff @(posedge clk) begin
         if (we) begin
-            vf[waddr] <= wdata;
+            vrf[waddr] <= wdata;
+            // $display("vrf[%x] <= %x\n", waddr, wdata);
         end
     end
 
     always_comb begin
         for (SizeT i = 0; i < NoVs; i++) begin
-            rdata[i] = vf[raddr[i]];
+            rdata[i] = vrf[raddr[i]];
         end
     end
 
