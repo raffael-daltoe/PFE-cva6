@@ -15,6 +15,9 @@ void print_config(void)
 #ifdef ADAC_HPM
     printf("   ADAC_HPM\n");
 #endif
+#ifdef DUMP
+    printf("   DUMP\n");
+#endif
 #ifdef VALIDATE
     printf("   VALIDATE\n");
 #endif
@@ -81,7 +84,7 @@ void hexdump(const void *buf, size_t len) {
         }
 
         printf("0x%08lx, ", word);
-        if ((i + 4) % 16 == 0) {
+        if ((i + 4) % 16 == 0 || i + 4 >= len) {
             printf("\n");
         }
     }

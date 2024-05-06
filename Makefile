@@ -1,5 +1,5 @@
 # Copyright (c) 2020 Thales.
-# 
+#
 # Copyright and related rights are licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.  You may obtain a copy of the License at
@@ -124,12 +124,17 @@ export HPDCACHE_TARGET_CFG
 # Sources
 # Package files -> compile first
 ariane_pkg := \
-              corev_apu/tb/ariane_axi_pkg.sv                         \
-              corev_apu/tb/axi_intf.sv                               \
-              corev_apu/register_interface/src/reg_intf.sv           \
-              corev_apu/tb/ariane_soc_pkg.sv                         \
-              corev_apu/riscv-dbg/src/dm_pkg.sv                      \
-              corev_apu/tb/ariane_axi_soc_pkg.sv
+	vendor/pulp-platform/axi/src/axi_pkg.sv \
+	core/include/config_pkg.sv \
+	core/include/${TARGET_CFG}_config_pkg.sv \
+	xadac/rtl/xadac_pkg.sv \
+	corev_apu/tb/ariane_axi_pkg.sv \
+	corev_apu/tb/axi_intf.sv \
+	corev_apu/register_interface/src/reg_intf.sv \
+	corev_apu/tb/ariane_soc_pkg.sv \
+	corev_apu/riscv-dbg/src/dm_pkg.sv \
+	corev_apu/tb/ariane_axi_soc_pkg.sv \
+
 ariane_pkg := $(addprefix $(root-dir), $(ariane_pkg))
 
 # Test packages
@@ -164,59 +169,85 @@ endif
 
 
 # this list contains the standalone components
-src :=  core/include/$(target)_config_pkg.sv                                         \
-        corev_apu/src/ariane.sv                                                      \
-        $(wildcard corev_apu/bootrom/*.sv)                                           \
-        $(wildcard corev_apu/clint/*.sv)                                             \
-        $(wildcard corev_apu/fpga/src/axi2apb/src/*.sv)                              \
-        $(wildcard corev_apu/fpga/src/apb_timer/*.sv)                                \
-        $(wildcard corev_apu/fpga/src/axi_slice/src/*.sv)                            \
-        $(wildcard corev_apu/src/axi_riscv_atomics/src/*.sv)                         \
-        $(wildcard corev_apu/axi_mem_if/src/*.sv)                                    \
-        corev_apu/rv_plic/rtl/rv_plic_target.sv                                      \
-        corev_apu/rv_plic/rtl/rv_plic_gateway.sv                                     \
-        corev_apu/rv_plic/rtl/plic_regmap.sv                                         \
-        corev_apu/rv_plic/rtl/plic_top.sv                                            \
-        corev_apu/riscv-dbg/src/dmi_cdc.sv                                           \
-        corev_apu/riscv-dbg/src/dmi_jtag.sv                                          \
-        corev_apu/riscv-dbg/src/dmi_jtag_tap.sv                                      \
-        corev_apu/riscv-dbg/src/dm_csrs.sv                                           \
-        corev_apu/riscv-dbg/src/dm_mem.sv                                            \
-        corev_apu/riscv-dbg/src/dm_sba.sv                                            \
-        corev_apu/riscv-dbg/src/dm_top.sv                                            \
-        corev_apu/riscv-dbg/debug_rom/debug_rom.sv                                   \
-        corev_apu/register_interface/src/apb_to_reg.sv                               \
-        vendor/pulp-platform/axi/src/axi_multicut.sv                                 \
-        vendor/pulp-platform/common_cells/src/rstgen_bypass.sv                       \
-        vendor/pulp-platform/common_cells/src/rstgen.sv                              \
-        vendor/pulp-platform/common_cells/src/addr_decode.sv                         \
-	vendor/pulp-platform/common_cells/src/stream_register.sv                     \
-        vendor/pulp-platform/axi/src/axi_cut.sv                                      \
-        vendor/pulp-platform/axi/src/axi_join.sv                                     \
-        vendor/pulp-platform/axi/src/axi_delayer.sv                                  \
-        vendor/pulp-platform/axi/src/axi_to_axi_lite.sv                              \
-        vendor/pulp-platform/axi/src/axi_id_prepend.sv                               \
-        vendor/pulp-platform/axi/src/axi_atop_filter.sv                              \
-        vendor/pulp-platform/axi/src/axi_err_slv.sv                                  \
-        vendor/pulp-platform/axi/src/axi_mux.sv                                      \
-        vendor/pulp-platform/axi/src/axi_demux.sv                                    \
-        vendor/pulp-platform/axi/src/axi_xbar.sv                                     \
-        vendor/pulp-platform/common_cells/src/cdc_2phase.sv                          \
-        vendor/pulp-platform/common_cells/src/spill_register_flushable.sv            \
-        vendor/pulp-platform/common_cells/src/spill_register.sv                      \
-        vendor/pulp-platform/common_cells/src/deprecated/fifo_v1.sv                  \
-        vendor/pulp-platform/common_cells/src/deprecated/fifo_v2.sv                  \
-        vendor/pulp-platform/common_cells/src/stream_delay.sv                        \
-        vendor/pulp-platform/common_cells/src/lfsr_16bit.sv                          \
-        vendor/pulp-platform/tech_cells_generic/src/deprecated/cluster_clk_cells.sv  \
-        vendor/pulp-platform/tech_cells_generic/src/deprecated/pulp_clk_cells.sv     \
-        vendor/pulp-platform/tech_cells_generic/src/rtl/tc_clk.sv                    \
-        corev_apu/tb/ariane_testharness.sv                                           \
-        corev_apu/tb/ariane_peripherals.sv                                           \
-        corev_apu/tb/rvfi_tracer.sv                                                  \
-        corev_apu/tb/common/uart.sv                                                  \
-        corev_apu/tb/common/SimDTM.sv                                                \
-        corev_apu/tb/common/SimJTAG.sv
+src := \
+	core/include/$(target)_config_pkg.sv \
+	corev_apu/src/ariane.sv \
+	corev_apu/src/axi_dcache_adapter.sv \
+	$(wildcard corev_apu/bootrom/*.sv) \
+	$(wildcard corev_apu/clint/*.sv) \
+	$(wildcard corev_apu/fpga/src/axi2apb/src/*.sv) \
+	$(wildcard corev_apu/fpga/src/apb_timer/*.sv) \
+	$(wildcard corev_apu/fpga/src/axi_slice/src/*.sv) \
+	$(wildcard corev_apu/src/axi_riscv_atomics/src/*.sv) \
+	$(wildcard corev_apu/axi_mem_if/src/*.sv) \
+	corev_apu/rv_plic/rtl/rv_plic_target.sv \
+	corev_apu/rv_plic/rtl/rv_plic_gateway.sv \
+	corev_apu/rv_plic/rtl/plic_regmap.sv \
+	corev_apu/rv_plic/rtl/plic_top.sv \
+	corev_apu/riscv-dbg/src/dmi_cdc.sv \
+	corev_apu/riscv-dbg/src/dmi_jtag.sv \
+	corev_apu/riscv-dbg/src/dmi_jtag_tap.sv \
+	corev_apu/riscv-dbg/src/dm_csrs.sv \
+	corev_apu/riscv-dbg/src/dm_mem.sv \
+	corev_apu/riscv-dbg/src/dm_sba.sv \
+	corev_apu/riscv-dbg/src/dm_top.sv \
+	corev_apu/riscv-dbg/debug_rom/debug_rom.sv \
+	corev_apu/register_interface/src/apb_to_reg.sv \
+	vendor/pulp-platform/axi/src/axi_multicut.sv \
+	vendor/pulp-platform/common_cells/src/rstgen_bypass.sv \
+	vendor/pulp-platform/common_cells/src/rstgen.sv \
+	vendor/pulp-platform/common_cells/src/addr_decode.sv \
+	vendor/pulp-platform/common_cells/src/id_queue.sv \
+	vendor/pulp-platform/common_cells/src/onehot_to_bin.sv \
+	vendor/pulp-platform/common_cells/src/stream_register.sv \
+	vendor/pulp-platform/axi/src/axi_burst_splitter.sv \
+	vendor/pulp-platform/axi/src/axi_cut.sv \
+	vendor/pulp-platform/axi/src/axi_dw_converter.sv \
+	vendor/pulp-platform/axi/src/axi_dw_downsizer.sv \
+	vendor/pulp-platform/axi/src/axi_dw_upsizer.sv \
+	vendor/pulp-platform/axi/src/axi_join.sv \
+	vendor/pulp-platform/axi/src/axi_delayer.sv \
+	vendor/pulp-platform/axi/src/axi_to_axi_lite.sv \
+	vendor/pulp-platform/axi/src/axi_id_prepend.sv \
+	vendor/pulp-platform/axi/src/axi_atop_filter.sv \
+	vendor/pulp-platform/axi/src/axi_err_slv.sv \
+	vendor/pulp-platform/axi/src/axi_mux.sv \
+	vendor/pulp-platform/axi/src/axi_demux.sv \
+	vendor/pulp-platform/axi/src/axi_xbar.sv \
+	vendor/pulp-platform/common_cells/src/cdc_2phase.sv \
+	vendor/pulp-platform/common_cells/src/spill_register_flushable.sv \
+	vendor/pulp-platform/common_cells/src/spill_register.sv \
+	vendor/pulp-platform/common_cells/src/deprecated/fifo_v1.sv \
+	vendor/pulp-platform/common_cells/src/deprecated/fifo_v2.sv \
+	vendor/pulp-platform/common_cells/src/stream_delay.sv \
+	vendor/pulp-platform/common_cells/src/lfsr_16bit.sv \
+	vendor/pulp-platform/tech_cells_generic/src/deprecated/cluster_clk_cells.sv \
+	vendor/pulp-platform/tech_cells_generic/src/deprecated/pulp_clk_cells.sv \
+	vendor/pulp-platform/tech_cells_generic/src/rtl/tc_clk.sv \
+	corev_apu/tb/ariane_testharness.sv \
+	corev_apu/tb/ariane_peripherals.sv \
+	corev_apu/tb/rvfi_tracer.sv \
+	corev_apu/tb/common/uart.sv \
+	corev_apu/tb/common/SimDTM.sv \
+	corev_apu/tb/common/SimJTAG.sv \
+	xadac/rtl/xadac_axi_cut.sv \
+	xadac/rtl/xadac_axi_skid.sv \
+	xadac/rtl/xadac_axi_wizard.sv \
+	xadac/rtl/xadac_if.sv \
+	xadac/rtl/xadac_cut.sv \
+	xadac/rtl/xadac_skid.sv \
+	xadac/rtl/xadac_vrf_phy.sv \
+	xadac/rtl/xadac_if_cut.sv \
+	xadac/rtl/xadac_if_skid.sv \
+	xadac/rtl/xadac_mux.sv \
+	xadac/rtl/xadac_sink.sv \
+	xadac/rtl/xadac_vactv.sv \
+	xadac/rtl/xadac_vbias.sv \
+	xadac/rtl/xadac_vclobber.sv \
+	xadac/rtl/xadac_vload.sv \
+	xadac/rtl/xadac_vmacc.sv \
+	xadac/rtl/xadac_vrf.sv \
+	xadac/rtl/xadac.sv \
 
 src := $(addprefix $(root-dir), $(src))
 
@@ -297,8 +328,8 @@ endif
 vcs_build: $(dpi-library)/ariane_dpi.so
 	mkdir -p $(vcs-library)
 	cd $(vcs-library) &&\
-	vlogan $(if $(VERDI), -kdb,) -full64 -nc -sverilog +define+$(defines) -assert svaext -f ../core/Flist.cva6 &&\
 	vlogan $(if $(VERDI), -kdb,) -full64 -nc -sverilog +define+$(defines) $(filter %.sv,$(ariane_pkg)) +incdir+core/include/+$(VCS_HOME)/etc/uvm-1.2/dpi &&\
+	vlogan $(if $(VERDI), -kdb,) -full64 -nc -sverilog +define+$(defines) -assert svaext -f ../core/Flist.cva6 &&\
 	vhdlan $(if $(VERDI), -kdb,) -full64 -nc $(filter %.vhd,$(uart_src)) &&\
 	vlogan $(if $(VERDI), -kdb,) -full64 -nc -sverilog -assert svaext +define+$(defines) $(filter %.sv,$(src)) +incdir+../vendor/pulp-platform/common_cells/include/+../vendor/pulp-platform/axi/include/+../corev_apu/register_interface/include/ &&\
 	vlogan $(if $(VERDI), -kdb,) -full64 -nc -sverilog -ntb_opts uvm-1.2 &&\
@@ -315,8 +346,8 @@ build: $(library) $(library)/.build-srcs $(library)/.build-tb
 
 # src files
 $(library)/.build-srcs: $(library)
-	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) -pedanticerrors -f core/Flist.cva6 $(list_incdir) -suppress 2583 +defines+$(defines)
 	$(VLOG) $(compile_flag) -work $(library) $(filter %.sv,$(ariane_pkg)) $(list_incdir) -suppress 2583 +defines+$(defines)
+	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) -pedanticerrors -f core/Flist.cva6 $(list_incdir) -suppress 2583 +defines+$(defines)
 	# Suppress message that always_latch may not be checked thoroughly by QuestaSim.
 	$(VCOM) $(compile_flag_vhd) -work $(library) $(filter %.vhd,$(uart_src)) +defines+$(defines)
 	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) -pedanticerrors $(filter %.sv,$(src)) $(tbs) $(list_incdir) -suppress 2583 +defines+$(defines)
@@ -336,7 +367,7 @@ $(library):
 
 # target used to run simulation, make sim APP=<software application to run on CVA6>
 # if you want to run in batch mode, use make <testname> batch-mode=1
-sim: build 
+sim: build
 	echo $(riscv-benchmarks)
 	vsim${questa_version} +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) +UVM_TESTNAME=$(test_case) \
 	 $(uvm-flags) $(QUESTASIM_FLAGS)  \
@@ -351,7 +382,7 @@ check-benchmarks:
 
 benchmark:
 	cd sw/app && make $(APP).mem && make $(APP).coe
-	
+
 
 
 
@@ -635,19 +666,19 @@ fpga_filter += $(addprefix $(root-dir), vendor/pulp-platform/tech_cells_generic/
 fpga_filter += $(addprefix $(root-dir), common/local/util/tc_sram_wrapper.sv)
 
 corev_apu/fpga/scripts/add_sources.tcl:
-	@echo read_vhdl        {$(uart_src)}    > corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(ariane_pkg)} >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src_flist))}		>> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(fpga_src)}   >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(ariane_pkg)}                              >  corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_vhdl        {$(uart_src)}                                >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src_flist))}	>> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	    >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(fpga_src)}                                >> corev_apu/fpga/scripts/add_sources.tcl
 
 fpga: $(ariane_pkg) $(src) $(fpga_src) $(uart_src) $(src_flist)
 	@echo "[FPGA] Generate sources"
-	@echo read_vhdl        {$(uart_src)}    > corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(ariane_pkg)} >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src_flist))}		>> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(fpga_src)}   >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(ariane_pkg)}                              >  corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_vhdl        {$(uart_src)}                                >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src_flist))}	>> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	    >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(fpga_src)}                                >> corev_apu/fpga/scripts/add_sources.tcl
 	@echo "[FPGA] Generate Bitstream"
 	cd corev_apu/fpga && make BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS)
 
@@ -670,10 +701,10 @@ cva6_fpga_ddr: $(ariane_pkg) $(util) $(src) $(fpga_src) $(uart_src) $(src_flist)
 	cd corev_apu/fpga && make cva6_fpga PS7_DDR=1 BRAM=0 XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) BATCH_MODE=$(BATCH_MODE) FPGA=1
 
 
-program_cva6_fpga: 
+program_cva6_fpga:
 	@echo "[FPGA] Program FPGA"
 	cd corev_apu/fpga && make program_cva6_fpga BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS) BATCH_MODE=$(BATCH_MODE)
-	
+
 
 build-spike:
 	cd tb/riscv-isa-sim && mkdir -p build && cd build && ../configure --prefix=`pwd`/../install --with-fesvr=$(RISCV) --enable-commitlog && make -j8 install

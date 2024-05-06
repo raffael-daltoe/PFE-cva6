@@ -24,7 +24,7 @@ module wt_cache_subsystem
   import wt_cache_pkg::*;
 #(
     parameter config_pkg::cva6_cfg_t CVA6Cfg    = config_pkg::cva6_cfg_empty,
-    parameter int unsigned           NumPorts   = 4,
+    parameter int unsigned           NumPorts   = 3,
     parameter type                   noc_req_t  = logic,
     parameter type                   noc_resp_t = logic
 ) (
@@ -97,13 +97,62 @@ module wt_cache_subsystem
       .mem_data_o    (icache_adapter)
   );
 
+  ariane_pkg::dcache_req_i_t dcache_req_write;
+  ariane_pkg::dcache_req_o_t dcache_rsp_write;
+
+  ariane_pkg::dcache_req_i_t [NumPorts-1:0] dcache_req_read;
+  ariane_pkg::dcache_req_o_t [NumPorts-1:0] dcache_rsp_read;
+
+  ariane_pkg::dcache_req_i_t [NumPorts:0] dcache_req;
+  ariane_pkg::dcache_req_o_t [NumPorts:0] dcache_rsp;
+
+  always_comb begin
+    automatic bit write_busy;
+
+    dcache_req_write = '0;
+    write_busy = 0;
+
+    for (int i = 0; i < NumPorts; i++) begin
+      if (dcache_req_ports_i[i].data_req && dcache_req_ports_i[i].data_we) begin
+        if (!write_busy) begin
+          dcache_req_write = dcache_req_ports_i[i];
+          dcache_req_ports_o[i] = dcache_rsp_write;
+          write_busy = 1;
+        end
+        else begin
+          dcache_req_ports_o[i] = '0;
+        end
+        dcache_req_read[i] = '0;
+      end
+      else begin
+        dcache_req_read[i] = dcache_req_ports_i[i];
+        dcache_req_ports_o[i] = dcache_rsp_read[i];
+      end
+
+      // Tag passthrough (tag_valid is not asserted in writes)
+      dcache_req_read[i].address_tag = dcache_req_ports_i[i].address_tag;
+      dcache_req_read[i].tag_valid   = dcache_req_ports_i[i].tag_valid;
+
+      // Read result passthrough (Write does not generate a result)
+      dcache_req_ports_o[i].data_rvalid = dcache_rsp_read[i].data_rvalid;
+      dcache_req_ports_o[i].data_rid    = dcache_rsp_read[i].data_rid;
+      dcache_req_ports_o[i].data_rdata  = dcache_rsp_read[i].data_rdata;
+      dcache_req_ports_o[i].data_ruser  = dcache_rsp_read[i].data_ruser;
+    end
+  end
+
+  assign dcache_req[NumPorts-1:0] = dcache_req_read;
+  assign dcache_req[NumPorts]     = dcache_req_write;
+
+  assign dcache_rsp_read  = dcache_rsp[NumPorts-1:0];
+  assign dcache_rsp_write = dcache_rsp[NumPorts];
 
   // Note:
-  // Ports 0/1 for PTW and LD unit are read only.
-  // they have equal prio and are RR arbited
-  // Port 2 is write only and goes into the merging write buffer
+  // The last port is write-only, the other ports are read-only.
+  // The read-only have equal prio and are RR arbited
   wt_dcache #(
       .CVA6Cfg  (CVA6Cfg),
+      .NumPorts (NumPorts+1),
       // use ID 1 for dcache reads and amos. note that the writebuffer
       // uses all IDs up to DCACHE_MAX_TX-1 for write transactions.
       .RdAmoTxId(1)
@@ -118,8 +167,8 @@ module wt_cache_subsystem
       .wbuffer_not_ni_o(wbuffer_not_ni_o),
       .amo_req_i       (dcache_amo_req_i),
       .amo_resp_o      (dcache_amo_resp_o),
-      .req_ports_i     (dcache_req_ports_i),
-      .req_ports_o     (dcache_req_ports_o),
+      .req_ports_i     (dcache_req),
+      .req_ports_o     (dcache_rsp),
       .miss_vld_bits_o (miss_vld_bits_o),
       .mem_rtrn_vld_i  (adapter_dcache_rtrn_vld),
       .mem_rtrn_i      (adapter_dcache),
@@ -199,31 +248,36 @@ module wt_cache_subsystem
   for (genvar j = 0; j < riscv::XLEN / 8; j++) begin : gen_invalid_write_assertion
     a_invalid_write_data :
     assert property (
-      @(posedge clk_i) disable iff (!rst_ni) dcache_req_ports_i[NumPorts-1].data_req |-> dcache_req_ports_i[NumPorts-1].data_be[j] |-> (|dcache_req_ports_i[NumPorts-1].data_wdata[j*8+:8] !== 1'hX))
+      @(posedge clk_i) disable iff (!rst_ni)
+        dcache_req_write.data_req |->
+        dcache_req_write.data_be[j] |->
+        (|dcache_req_write.data_wdata[j*8+:8] !== 1'hX))
     else
       $warning(
           1,
           "[l1 dcache] writing invalid data: paddr=%016X, be=%02X, data=%016X, databe=%016X",
           {
-            dcache_req_ports_i[NumPorts-1].address_tag, dcache_req_ports_i[NumPorts-1].address_index
+            dcache_req_write.address_tag, dcache_req_write.address_index
           },
-          dcache_req_ports_i[NumPorts-1].data_be,
-          dcache_req_ports_i[NumPorts-1].data_wdata,
-          dcache_req_ports_i[NumPorts-1].data_be & dcache_req_ports_i[NumPorts-1].data_wdata
+          dcache_req_write.data_be,
+          dcache_req_write.data_wdata,
+          dcache_req_write.data_be & dcache_req_write.data_wdata
       );
   end
 
 
-  for (genvar j = 0; j < NumPorts - 1; j++) begin : gen_assertion
+  for (genvar j = 0; j < NumPorts; j++) begin : gen_assertion
     a_invalid_read_data :
     assert property (
-      @(posedge clk_i) disable iff (!rst_ni) dcache_req_ports_o[j].data_rvalid && ~dcache_req_ports_i[j].kill_req |-> (|dcache_req_ports_o[j].data_rdata) !== 1'hX)
+      @(posedge clk_i) disable iff (!rst_ni)
+        dcache_rsp_read[j].data_rvalid && ~dcache_req_read[j].kill_req |->
+        (|dcache_rsp_read[j].data_rdata) !== 1'hX)
     else
       $warning(
           1,
           "[l1 dcache] reading invalid data on port %01d: data=%016X",
           j,
-          dcache_req_ports_o[j].data_rdata
+          dcache_rsp_read[j].data_rdata
       );
   end
 `endif

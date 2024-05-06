@@ -12,6 +12,8 @@
 
 module cvxif_fu
   import ariane_pkg::*;
+  import riscv::*;
+  import xadac_pkg::*;
 #(
     parameter config_pkg::cva6_cfg_t CVA6Cfg = config_pkg::cva6_cfg_empty
 ) (
@@ -30,83 +32,175 @@ module cvxif_fu
     output logic                                       x_valid_o,
     output logic                                       x_we_o,
     //to coprocessor
-    output cvxif_pkg::cvxif_req_t                      cvxif_req_o,
-    input  cvxif_pkg::cvxif_resp_t                     cvxif_resp_i
+    xadac_if.mst                                       xadac
 );
-  localparam X_NUM_RS     = ariane_pkg::NR_RGPR_PORTS;
 
-  logic illegal_n, illegal_q;
-  logic [TRANS_ID_BITS-1:0] illegal_id_n, illegal_id_q;
-  logic [31:0] illegal_instr_n, illegal_instr_q;
-  logic [X_NUM_RS-1:0] rs_valid;
+    if (TRANS_ID_BITS != IdWidth) $error("TRANS_ID_BITS != IdWidth");
+    if (NR_RGPR_PORTS < NoRs)     $error("NR_RGPR_PORTS <= NoRs");
+    if (XLEN != RegDataWidth)     $error("XLEN != RegDataWidth");
+    if (XLEN != RegDataWidth)     $error("XLEN != RegDataWidth");
 
-  if (cvxif_pkg::X_NUM_RS == 3) begin : gen_third_operand
-    assign rs_valid = 3'b111;
-  end else begin : gen_no_third_operand
-    assign rs_valid = 2'b11;
-  end
+    // req ====================================================================
 
-  always_comb begin
-    cvxif_req_o = '0;
-    cvxif_req_o.x_result_ready = 1'b1;
-    x_ready_o = cvxif_resp_i.x_issue_ready;
-    if (x_valid_i) begin
-      cvxif_req_o.x_issue_valid     = x_valid_i;
-      cvxif_req_o.x_issue_req.instr = x_off_instr_i;
-      cvxif_req_o.x_issue_req.mode  = priv_lvl_i;
-      cvxif_req_o.x_issue_req.id    = fu_data_i.trans_id;
-      cvxif_req_o.x_issue_req.rs[0] = fu_data_i.operand_a;
-      cvxif_req_o.x_issue_req.rs[1] = fu_data_i.operand_b;
-      if (cvxif_pkg::X_NUM_RS == 3) begin
-        cvxif_req_o.x_issue_req.rs[2] = fu_data_i.imm;
-      end
-      cvxif_req_o.x_issue_req.rs_valid   = rs_valid;
-      cvxif_req_o.x_commit_valid         = x_valid_i;
-      cvxif_req_o.x_commit.id            = fu_data_i.trans_id;
-      cvxif_req_o.x_commit.x_commit_kill = 1'b0;
+    typedef struct packed {
+        IdT                 id;
+        InstrT              instr;
+        RegAddrT [NoRs-1:0] rs_addr;
+        RegDataT [NoRs-1:0] rs_data;
+    } x_req_t;
+
+    x_req_t x_req;
+    logic   x_req_valid;
+    logic   x_req_ready;
+
+    x_req_t x_req_mid;
+    logic   x_req_mid_valid;
+    logic   x_req_mid_ready;
+
+    x_req_t x_req_spill;
+    logic   x_req_spill_valid;
+    logic   x_req_spill_ready;
+
+    assign x_req.id         = fu_data_i.trans_id;
+    assign x_req.instr      = x_off_instr_i;
+    assign x_req.rs_addr[0] = x_off_instr_i[19:15];
+    assign x_req.rs_addr[1] = x_off_instr_i[24:20];
+    assign x_req.rs_data[0] = fu_data_i.operand_a;
+    assign x_req.rs_data[1] = fu_data_i.operand_b;
+    assign x_req_valid      = x_valid_i;
+    assign x_ready_o        = x_req_ready;
+
+    spill_register #(
+        .T      (x_req_t),
+        .Bypass (0)
+    ) i_x_req_mid (
+        .clk_i   (clk_i),
+        .rst_ni  (rst_ni),
+
+        .valid_i (x_req_valid),
+        .ready_o (x_req_ready),
+        .data_i  (x_req),
+
+        .valid_o (x_req_mid_valid),
+        .ready_i (x_req_mid_ready),
+        .data_o  (x_req_mid)
+    );
+
+    spill_register #(
+        .T      (x_req_t),
+        .Bypass (0)
+    ) i_x_req_spill (
+        .clk_i   (clk_i),
+        .rst_ni  (rst_ni),
+
+        .valid_i (x_req_mid_valid),
+        .ready_o (x_req_mid_ready),
+        .data_i  (x_req_mid),
+
+        .valid_o (x_req_spill_valid),
+        .ready_i (x_req_spill_ready),
+        .data_o  (x_req_spill)
+    );
+
+    assign xadac.dec_req.id    = x_req_spill.id;
+    assign xadac.dec_req.instr = x_req_spill.instr;
+
+    assign xadac.exe_req.id         = x_req_spill.id;
+    assign xadac.exe_req.instr      = x_req_spill.instr;
+    assign xadac.exe_req.rs_addr    = x_req_spill.rs_addr;
+    assign xadac.exe_req.rs_data    = x_req_spill.rs_data;
+    assign xadac.exe_req.vs_addr[0] = x_req_spill.instr[19:15];
+    assign xadac.exe_req.vs_addr[1] = x_req_spill.instr[24:20];
+    assign xadac.exe_req.vs_addr[2] = x_req_spill.instr[11: 7];
+    assign xadac.exe_req.vs_data = '0;
+
+    logic dec_req_done_d, dec_req_done_q;
+    logic exe_req_done_d, exe_req_done_q;
+
+    always_comb begin : comb_req
+
+        dec_req_done_d = dec_req_done_q;
+        exe_req_done_d = exe_req_done_q;
+
+        /* xadac dec req */
+
+        xadac.dec_req_valid = x_req_spill_valid && !dec_req_done_d;
+
+        if (xadac.dec_req_valid && xadac.dec_req_ready) begin
+            dec_req_done_d = '1;
+        end
+
+        /* xadac exe req */
+
+        xadac.exe_req_valid = x_req_spill_valid && !exe_req_done_d;
+
+        if (xadac.exe_req_valid && xadac.exe_req_ready) begin
+            exe_req_done_d = '1;
+        end
+
+        /* cva6 issue */
+
+        x_req_spill_ready = (dec_req_done_d && exe_req_done_d);
+
+        if (x_req_spill_valid && x_req_spill_ready) begin
+            dec_req_done_d = '0;
+            exe_req_done_d = '0;
+        end
     end
-  end
 
-  always_comb begin
-    illegal_n       = illegal_q;
-    illegal_id_n    = illegal_id_q;
-    illegal_instr_n = illegal_instr_q;
-    if (~cvxif_resp_i.x_issue_resp.accept && cvxif_req_o.x_issue_valid && cvxif_resp_i.x_issue_ready && ~illegal_n) begin
-      illegal_n       = 1'b1;
-      illegal_id_n    = cvxif_req_o.x_issue_req.id;
-      illegal_instr_n = cvxif_req_o.x_issue_req.instr;
+    always_ff @(posedge clk_i, negedge rst_ni) begin : seq_req
+        if (~rst_ni) begin
+            dec_req_done_q <= '0;
+            exe_req_done_q <= '0;
+        end
+        else begin
+            dec_req_done_q <= dec_req_done_d;
+            exe_req_done_q <= exe_req_done_d;
+        end
     end
-    x_valid_o = cvxif_resp_i.x_result_valid;  //Read result only when CVXIF is enabled
-    x_trans_id_o = x_valid_o ? cvxif_resp_i.x_result.id : '0;
-    x_result_o = x_valid_o ? cvxif_resp_i.x_result.data : '0;
-    x_exception_o.cause   = x_valid_o ? {{(riscv::XLEN-6){1'b0}}, cvxif_resp_i.x_result.exccode} : '0;
-    x_exception_o.valid = x_valid_o ? cvxif_resp_i.x_result.exc : '0;
-    x_exception_o.tval = '0;
-    x_we_o = x_valid_o ? cvxif_resp_i.x_result.we : '0;
-    if (illegal_n) begin
-      if (~x_valid_o) begin
-        x_trans_id_o = illegal_id_n;
-        x_result_o = '0;
-        x_valid_o = 1'b1;
-        x_exception_o.cause = riscv::ILLEGAL_INSTR;
-        x_exception_o.valid = 1'b1;
-        x_exception_o.tval = illegal_instr_n;
-        x_we_o = '0;
-        illegal_n             = '0; // Reset flag for illegal instr. illegal_id and illegal instr values are a don't care, no need to reset it.
-      end
-    end
-  end
 
-  always_ff @(posedge clk_i, negedge rst_ni) begin
-    if (~rst_ni) begin
-      illegal_q       <= 1'b0;
-      illegal_id_q    <= '0;
-      illegal_instr_q <= '0;
-    end else begin
-      illegal_q       <= illegal_n;
-      illegal_id_q    <= illegal_id_n;
-      illegal_instr_q <= illegal_instr_n;
+    // rsp ====================================================================
+
+    always_comb begin : gen_rsp
+
+        x_trans_id_o        = '0;
+        x_exception_o.cause = '0;
+        x_exception_o.valid = '0;
+        x_exception_o.tval  = '0;
+        x_result_o          = '0;
+        x_valid_o           = '0;
+        x_we_o              = '0;
+
+        /* xadac dec rsp */
+
+        xadac.dec_rsp_ready = !xadac.exe_rsp_valid;
+
+        if (xadac.dec_rsp_valid && xadac.dec_rsp_ready) begin
+            if (!xadac.dec_rsp.accept) begin
+                x_trans_id_o        = xadac.dec_rsp.id;
+                x_exception_o.cause = riscv::ILLEGAL_INSTR;
+                x_exception_o.valid = '1;
+                x_exception_o.tval  = 32'h0BAD_ADAC;
+                x_result_o          = '0;
+                x_valid_o           = '1;
+                x_we_o              = '0;
+            end
+        end
+
+        /* xadac exe rsp */
+
+        xadac.exe_rsp_ready = '1;
+
+        if(xadac.exe_rsp_valid && xadac.exe_rsp_ready) begin
+            x_trans_id_o        = xadac.exe_rsp.id;
+            x_exception_o.cause = '0;
+            x_exception_o.valid = '0;
+            x_exception_o.tval  = '0;
+            x_result_o          = xadac.exe_rsp.rd_data;
+            x_valid_o           = '1;
+            x_we_o              = xadac.exe_rsp.rd_write;
+        end
+
     end
-  end
 
 endmodule

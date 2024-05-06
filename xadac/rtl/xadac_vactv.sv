@@ -20,6 +20,10 @@ module xadac_vactv
     output logic axi_b_ready
 );
 
+    localparam SizeT ILenWidth = $clog2(VecDataWidth/VecSumWidth+1);
+
+    typedef logic [ILenWidth-1:0] ilen_t;
+
     typedef struct packed {
         AddrT    addr;
         VecDataT data;
@@ -44,10 +48,7 @@ module xadac_vactv
     VecStrbT axi_w_strb_d;
     logic    axi_w_valid_d;
 
-    logic axi_b_ready_d;
-
     always_comb begin
-        automatic SizeT     i     = '0;
         automatic IdT       id    = '0;
         automatic VecLenT   vlen  = '0;
         automatic RegDataT  shift = '0;
@@ -55,7 +56,7 @@ module xadac_vactv
         automatic VecSumT   sum   = '0;
         automatic VecElemT  elem  = '0;
 
-        sb_d    = sb_q;
+        sb_d = sb_q;
 
         exe_rsp_d       = slv.exe_rsp;
         exe_rsp_valid_d = slv.exe_rsp_valid;
@@ -68,8 +69,6 @@ module xadac_vactv
         axi_w_strb_d  = axi_w_strb;
         axi_w_valid_d = axi_w_valid;
 
-        axi_b_ready_d = axi_b_ready;
-
         // dec ================================================================
 
         slv.dec_rsp_valid = slv.dec_req_valid;
@@ -81,7 +80,8 @@ module xadac_vactv
         slv.dec_rsp.rs_read[0] = '1;
         slv.dec_rsp.rs_read[1] = '0;
         slv.dec_rsp.vs_read[0] = '0;
-        slv.dec_rsp.vs_read[1] = '1;
+        slv.dec_rsp.vs_read[1] = '0;
+        slv.dec_rsp.vs_read[2] = '1;
         slv.dec_rsp.accept = '1;
 
         // exe req ============================================================
@@ -95,10 +95,12 @@ module xadac_vactv
             vlen  = slv.exe_req.instr[25 +: VecLenWidth];
 
             data = '0;
-            for (VecLenT i = 0; i < vlen; i++) begin
-                sum = slv.exe_req.vs_data[2][VecSumWidth*i +: VecSumWidth];
-                elem = VecElemT'((signed'(sum) > 0) ? (sum >> shift) : 0);
-                data[VecElemWidth*i +: VecElemWidth] = elem;
+            for (SizeT i = 0; i < VecDataWidth/VecSumWidth; i++) begin
+                if (i < vlen) begin
+                    sum = slv.exe_req.vs_data[2][VecSumWidth*i +: VecSumWidth];
+                    elem = VecElemT'((signed'(sum) > 0) ? (sum >> shift) : 0);
+                    data[VecElemWidth*i +: VecElemWidth] = elem;
+                end
             end
 
             sb_d[id].addr = AddrT'(slv.exe_req.rs_data[0]);
@@ -116,7 +118,7 @@ module xadac_vactv
             axi_aw_valid_d = '0;
         end
 
-        for(i = 0; i < SbLen; i++) begin
+        for(SizeT i = 0; i < SbLen; i++) begin
             id = IdT'(i);
             if(
                 !axi_aw_valid_d &&
@@ -138,7 +140,7 @@ module xadac_vactv
             axi_w_valid_d = '0;
         end
 
-        for(i = 0; i < SbLen; i++) begin
+        for(SizeT i = 0; i < SbLen; i++) begin
             id = IdT'(i);
             if(
                 !axi_w_valid_d &&
@@ -156,6 +158,13 @@ module xadac_vactv
 
         id = axi_b_id;
 
+        axi_b_ready = (
+            axi_b_valid &&
+            sb_d[id].axi_aw_done &&
+            sb_d[id].axi_w_done &&
+            !sb_d[id].axi_b_done
+        );
+
         if (axi_b_valid && axi_b_ready) begin
             sb_d[id].axi_b_done = '1;
         end
@@ -169,7 +178,7 @@ module xadac_vactv
             exe_rsp_valid_d = '0;
         end
 
-        for(i = 0; i < SbLen; i++) begin
+        for(SizeT i = 0; i < SbLen; i++) begin
             id = IdT'(i);
             if(
                 !exe_rsp_valid_d &&
@@ -185,7 +194,7 @@ module xadac_vactv
 
         // clean sb ===========================================================
 
-        for (i = 0; i < SbLen; i++) begin
+        for (SizeT i = 0; i < SbLen; i++) begin
             id = IdT'(i);
             if (
                 sb_d[id].exe_req_done &&
@@ -213,11 +222,9 @@ module xadac_vactv
             axi_w_data  <= '0;
             axi_w_strb  <= '0;
             axi_w_valid <= '0;
-
-            axi_b_ready <= '0;
         end
         else begin
-            sb_q <= sb_q;
+            sb_q <= sb_d;
 
             slv.exe_rsp       <= exe_rsp_d;
             slv.exe_rsp_valid <= exe_rsp_valid_d;
@@ -229,8 +236,6 @@ module xadac_vactv
             axi_w_data  <= axi_w_data_d;
             axi_w_strb  <= axi_w_strb_d;
             axi_w_valid <= axi_w_valid_d;
-
-            axi_b_ready <= axi_w_ready;
         end
     end
 endmodule

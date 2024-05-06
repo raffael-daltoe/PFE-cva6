@@ -38,21 +38,23 @@ module xadac_vrf
 
     // exe ====================================================================
 
-    always_comb begin : comb_exe_req
-        phy_raddr = slv.exe_req.vs_addr;
+    assign phy_raddr = slv.exe_req.vs_addr;
 
-        mst.exe_req.id      = slv.exe_req.id;
-        mst.exe_req.instr   = slv.exe_req.instr;
-        mst.exe_req.rs_addr = slv.exe_req.rs_addr;
-        mst.exe_req.rs_data = slv.exe_req.rs_data;
-        mst.exe_req.vs_addr = slv.exe_req.vs_addr;
-        mst.exe_req.vs_data = phy_rdata;
+    assign mst.exe_req.id      = slv.exe_req.id;
+    assign mst.exe_req.instr   = slv.exe_req.instr;
+    assign mst.exe_req.rs_addr = slv.exe_req.rs_addr;
+    assign mst.exe_req.rs_data = slv.exe_req.rs_data;
+    assign mst.exe_req.vs_addr = slv.exe_req.vs_addr;
+    assign mst.exe_req.vs_data = phy_rdata;
 
-        mst.exe_req_valid = slv.exe_req_valid;
-        slv.exe_req_ready = mst.exe_req_ready;
-    end
+    assign mst.exe_req_valid = slv.exe_req_valid;
+    assign slv.exe_req_ready = mst.exe_req_ready;
 
     always_comb begin : comb_exe_rsp
+        slv.exe_rsp       = mst.exe_rsp;
+        slv.exe_rsp_valid = mst.exe_rsp_valid;
+        mst.exe_rsp_ready = slv.exe_rsp_ready;
+
         if (mst.exe_rsp_valid && mst.exe_rsp_ready) begin
             phy_waddr = mst.exe_rsp.vd_addr;
             phy_wdata = mst.exe_rsp.vd_data;
@@ -63,10 +65,6 @@ module xadac_vrf
             phy_wdata = '0;
             phy_we    = '0;
         end
-
-        slv.exe_rsp       = mst.exe_rsp;
-        slv.exe_rsp_valid = mst.exe_rsp_valid;
-        mst.exe_rsp_ready = slv.exe_rsp_ready;
     end
 
 endmodule

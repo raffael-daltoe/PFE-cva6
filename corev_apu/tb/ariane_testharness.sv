@@ -144,7 +144,7 @@ module ariane_testharness #(
   // Debug
   // ---------------
   assign init_done = rst_ni;
-  
+
   assign debug_req_valid     = jtag_req_valid;
   assign debug_resp_ready    = jtag_resp_ready;
   assign debug_req           = jtag_dmi_req;
@@ -682,6 +682,7 @@ module ariane_testharness #(
       axi_ariane_resp.r_valid &&
       axi_ariane_resp.r.resp inside {axi_pkg::RESP_DECERR, axi_pkg::RESP_SLVERR}) begin
       $warning("R Response Errored");
+      $finish();
     end
     if (axi_ariane_req.b_ready &&
       axi_ariane_resp.b_valid &&

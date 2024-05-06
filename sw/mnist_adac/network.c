@@ -209,6 +209,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     perf_toc();
 #endif
 
+#ifdef DUMP
+    printf("l0_out:\n");
+    hexdump(l0_out, L0_O_SIZE);
+#endif
+
 #ifdef VALIDATE
     crc = 0;
     crc32(&crc, l0_out, L0_O_SIZE);
@@ -224,6 +229,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
 
 #ifdef LAYER_PERF
     perf_toc();
+#endif
+
+#ifdef DUMP
+    printf("l1_out:\n");
+    hexdump(l1_out, L1_O_SIZE);
 #endif
 
 #ifdef VALIDATE
@@ -243,6 +253,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     perf_toc();
 #endif
 
+#ifdef DUMP
+    printf("l2_out:\n");
+    hexdump(l2_out, L2_O_SIZE);
+#endif
+
 #ifdef VALIDATE
     crc = 0;
     crc32(&crc, l2_out, L2_O_SIZE);
@@ -258,6 +273,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
 
 #ifdef LAYER_PERF
     perf_toc();
+#endif
+
+#ifdef DUMP
+    printf("l3_out:\n");
+    hexdump(l3_out, L3_O_SIZE);
 #endif
 
 #ifdef VALIDATE

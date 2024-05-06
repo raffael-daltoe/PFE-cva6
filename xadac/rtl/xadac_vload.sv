@@ -40,9 +40,10 @@ module xadac_vload
         automatic IdT      id      = '0;
         automatic SizeT    i       = '0;
         automatic SizeT    j       = '0;
+        automatic SizeT    k       = '0;
         automatic VecDataT vd_data = '0;
 
-        sb_d    = sb_q;
+        sb_d = sb_q;
 
         exe_rsp_d       = slv.exe_rsp;
         exe_rsp_valid_d = slv.exe_rsp_valid;
@@ -135,10 +136,10 @@ module xadac_vload
                 !sb_d[id].exe_rsp_done
             ) begin
                 vd_data = '0;
-                for (i = 0; i < VecDataWidth/VecElemWidth; i++) begin
-                    j = i % SizeT'(sb_d[id].vlen);
-                    vd_data[VecElemWidth*i +: VecElemWidth] =
-                        sb_d[id].data[VecElemWidth*j +: VecElemWidth];
+                for (j = 0; j < VecDataWidth/VecElemWidth; j++) begin
+                    k = j % SizeT'(sb_d[id].vlen);
+                    vd_data[VecElemWidth*j +: VecElemWidth] =
+                        sb_d[id].data[VecElemWidth*k +: VecElemWidth];
                 end
 
                 exe_rsp_d          = '0;

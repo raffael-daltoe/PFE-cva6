@@ -54,8 +54,35 @@ module xadac_mux
     always_comb begin
         automatic idx_t idx = '0;
 
-        sb_d          = sb_q;
         dec_rsp_idx_d = dec_rsp_idx_q;
+
+        // dec rsp ============================================================
+
+        slv.dec_rsp       = '0;
+        slv.dec_rsp_valid = '0;
+        mst_dec_rsp_ready = '0;
+
+        for (SizeT i = 0; i < NoMst; i++) begin
+            idx = idx_t'(i);
+            if (
+                mst_dec_rsp_valid[dec_rsp_idx_d] ||
+                mst_dec_rsp_valid[idx]
+            ) begin
+                slv.dec_rsp            = mst_dec_rsp[idx];
+                slv.dec_rsp_valid      = mst_dec_rsp_valid[idx];
+                mst_dec_rsp_ready[idx] = slv.dec_rsp_ready;
+
+                dec_rsp_idx_d = idx;
+
+                break;
+            end
+        end
+    end
+
+    always_comb begin
+        automatic idx_t idx = '0;
+
+        sb_d          = sb_q;
         exe_rsp_idx_d = exe_rsp_idx_q;
 
         // dec req ============================================================
@@ -75,28 +102,6 @@ module xadac_mux
                 slv.dec_req_ready      = mst_dec_req_ready[idx];
 
                 sb_d[slv.dec_req.id] = idx;
-
-                break;
-            end
-        end
-
-        // dec rsp ============================================================
-
-        slv.dec_rsp       = '0;
-        slv.dec_rsp_valid = '0;
-        mst_dec_rsp_ready = '0;
-
-        for (SizeT i = 0; i < NoMst; i++) begin
-            idx = idx_t'(i);
-            if (
-                mst_dec_rsp_valid[dec_rsp_idx_d] ||
-                mst_dec_rsp_valid[idx]
-            ) begin
-                slv.dec_rsp            = mst_dec_rsp[idx];
-                slv.dec_rsp_valid      = mst_dec_rsp_valid[idx];
-                mst_dec_rsp_ready[idx] = slv.dec_rsp_ready;
-
-                dec_rsp_idx_d = idx;
 
                 break;
             end

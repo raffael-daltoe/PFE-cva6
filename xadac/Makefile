@@ -19,8 +19,10 @@ SV_SRC = \
 	$(AXI_DIR)/src/axi_intf.sv \
 	$(RTL_DIR)/xadac_pkg.sv \
 	$(RTL_DIR)/xadac_if.sv \
+	$(RTL_DIR)/xadac_cut.sv \
 	$(RTL_DIR)/xadac_skid.sv \
 	$(RTL_DIR)/xadac_vrf_phy.sv \
+	$(RTL_DIR)/xadac_if_cut.sv \
 	$(RTL_DIR)/xadac_if_skid.sv \
 	$(RTL_DIR)/xadac_mux.sv \
 	$(RTL_DIR)/xadac_sink.sv \

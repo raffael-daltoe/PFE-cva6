@@ -1,5 +1,5 @@
 # Copyright (c) 2023 Thales.
-# 
+#
 # Copyright and related rights are licensed under the Apache
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.  You may obtain a copy of the License at
@@ -16,9 +16,9 @@
 #
 # script Name:    Dockerfile
 # Project Name:   cva6-softcore-contest
-# Language:       
+# Language:
 #
-# Description:    This dokerfile aims at building a container image including 
+# Description:    This dokerfile aims at building a container image including
 #                 RISCV GCC13.1.0 and OpenOCD
 #
 # =========================================================================== #
@@ -42,46 +42,63 @@ RUN apt-get -y update && \
     autoconf \
     automake \
     autotools-dev \
-    curl \
-    git \
-    libmpc-dev \
-    libmpfr-dev \
-    libgmp-dev \
-    gawk \
+    bc \
     build-essential \
     bison \
-    flex \
-    texinfo \
+    ccache \
+    cmake \
+    curl \
+    device-tree-compiler \
+    gawk \
+    gcc \
+    git \
     gperf \
-    libtool \
-    bc \
-    zlib1g-dev \
-    libusb-1.0-0-dev \
+    g++ \
+    flex \
+    help2man \
+    libfl-dev \
+    libfl2 \
     libftdi1-dev \
-    srecord \
-    sudo \
-    texinfo \
-    udev \
+    libgmp-dev \
+    libmpc-dev \
+    libmpfr-dev \
+    libgoogle-perftools-dev \
+    libtool \
+    libusb-1.0-0-dev \
     locales \
     make \
     net-tools \
     ninja-build \
+    numactl \
     openssh-client \
+    perl-doc \
+    perl \
     pkg-config \
-    g++ \
-    gawk \
-    gcc \
     python3-dev \
     python3-pip \
     python3-ply \
     python3-setuptools \
     python-is-python3 \
-    device-tree-compiler \
-    cmake
+    python3 \
+    srecord \
+    sudo \
+    texinfo \
+    udev \
+    zlibc \
+    zlib1g-dev \
+    zlib1g
+
+RUN git clone https://github.com/verilator/verilator && \
+    cd verilator && \
+    git checkout v5.024 && \
+    autoconf && \
+    ./configure && \
+    make -j$(nproc) && \
+    make install
 
 RUN mkdir -p /opt/riscv/bin
-ENV RISCV="/opt/riscv"		
-ENV PATH="$PATH:$RISCV/bin"		
+ENV RISCV="/opt/riscv"
+ENV PATH="$PATH:$RISCV/bin"
 
 # Install OpenOCD
 RUN git clone https://github.com/openocd-org/openocd && \
@@ -92,7 +109,7 @@ RUN git clone https://github.com/openocd-org/openocd && \
     ./configure --enable-ftdi --prefix=$RISCV --exec-prefix=$RISCV  && \
     make && \
     make install
-        
+
 # Install rule for udev to access HS2 cable
 RUN echo "ATTRS{idVendor}==\"0403\", ATTRS{idProduct}==\"6014\", MODE=\"660\", GROUP=\"plugdev\", TAG+=\"uaccess\"" > /etc/udev/rules.d/60-openocd.rules
 

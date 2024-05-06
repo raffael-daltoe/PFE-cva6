@@ -1,6 +1,6 @@
 module xadac_skid #(
-    parameter bit Passthrough = 0,
-    parameter type DataT = logic
+    parameter bit  Bypass = 0,
+    parameter type DataT  = logic
 ) (
     input logic clk,
     input logic rstn,
@@ -14,7 +14,7 @@ module xadac_skid #(
     input  logic mst_ready
 );
 
-    if (Passthrough) begin : gen_passthrough
+    if (Bypass) begin : gen_bypass
         assign mst_data  = slv_data;
         assign mst_valid = slv_valid;
         assign slv_ready = mst_ready;

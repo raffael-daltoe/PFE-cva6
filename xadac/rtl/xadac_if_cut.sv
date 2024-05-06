@@ -1,4 +1,4 @@
-module xadac_if_skid
+module xadac_if_cut
     import xadac_pkg::*;
 #(
     parameter bit BypassDecReq = 0,
@@ -12,10 +12,10 @@ module xadac_if_skid
     xadac_if.mst mst
 );
 
-    xadac_skid #(
+    xadac_cut #(
         .Bypass (BypassDecReq),
         .DataT  (DecReqT)
-    ) i_dec_req_skid (
+    ) i_dec_req_cut (
         .clk  (clk),
         .rstn (rstn),
 
@@ -28,10 +28,10 @@ module xadac_if_skid
         .mst_ready (mst.dec_req_ready)
     );
 
-    xadac_skid #(
+    xadac_cut #(
         .Bypass (BypassDecRsp),
         .DataT  (DecRspT)
-    ) i_dec_rsp_skid (
+    ) i_dec_rsp_cut (
         .clk  (clk),
         .rstn (rstn),
 
@@ -44,10 +44,10 @@ module xadac_if_skid
         .mst_ready (slv.dec_rsp_ready)
     );
 
-    xadac_skid #(
+    xadac_cut #(
         .Bypass (BypassExeReq),
         .DataT  (ExeReqT)
-    ) i_exe_req_skid (
+    ) i_exe_req_cut (
         .clk  (clk),
         .rstn (rstn),
 
@@ -60,10 +60,10 @@ module xadac_if_skid
         .mst_ready (mst.exe_req_ready)
     );
 
-    xadac_skid #(
+    xadac_cut #(
         .Bypass (BypassExeRsp),
         .DataT  (ExeRspT)
-    ) i_exe_rsp_skid (
+    ) i_exe_rsp_cut (
         .clk  (clk),
         .rstn (rstn),
 

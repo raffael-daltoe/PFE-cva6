@@ -65,8 +65,8 @@ module load_store_unit
     output logic                               dtlb_miss_o,
 
     // interface to dcache
-    input  dcache_req_o_t  [ 2:0]                  dcache_req_ports_i,
-    output dcache_req_i_t  [ 2:0]                  dcache_req_ports_o,
+    input  dcache_req_o_t                          dcache_req_ports_i,
+    output dcache_req_i_t                          dcache_req_ports_o,
     input  logic                                   dcache_wbuffer_empty_i,
     input  logic                                   dcache_wbuffer_not_ni_i,
     // AMO interface
@@ -83,6 +83,49 @@ module load_store_unit
     output [          (riscv::XLEN/8)-1:0] lsu_wmask_o,
     output [ariane_pkg::TRANS_ID_BITS-1:0] lsu_addr_trans_id_o
 );
+
+  // D$ multiplexer ===========================================================
+
+  dcache_req_i_t mmu_dcache_req;
+  dcache_req_o_t mmu_dcache_rsp;
+
+  dcache_req_i_t store_dcache_req;
+  dcache_req_o_t store_dcache_rsp;
+
+  dcache_req_i_t load_dcache_req;
+  dcache_req_o_t load_dcache_rsp;
+
+  assign mmu_dcache_rsp = '0;
+
+  always_comb begin
+    if (load_dcache_req.data_req || load_dcache_req.tag_valid) begin
+        dcache_req_ports_o = load_dcache_req;
+        store_dcache_rsp = '0;
+        load_dcache_rsp = dcache_req_ports_i;
+    end
+    else begin
+      dcache_req_ports_o = store_dcache_req;
+      store_dcache_rsp = dcache_req_ports_i;
+      load_dcache_rsp = '0;
+    end
+
+    store_dcache_rsp.data_rvalid = '0;
+    store_dcache_rsp.data_rid    = '0;
+    store_dcache_rsp.data_rdata  = '0;
+    store_dcache_rsp.data_ruser  = '0;
+
+    load_dcache_rsp.data_rvalid = dcache_req_ports_i.data_rvalid;
+    load_dcache_rsp.data_rid    = dcache_req_ports_i.data_rid;
+    load_dcache_rsp.data_rdata  = dcache_req_ports_i.data_rdata;
+    load_dcache_rsp.data_ruser  = dcache_req_ports_i.data_ruser;
+  end
+
+`ifndef VERILATOR
+  if (MMU_PRESENT) $error("MMU's D$ port is tied off.");
+`endif
+
+  //===========================================================================
+
   // data is misaligned
   logic                               data_misaligned;
   // --------------------------------------
@@ -158,8 +201,8 @@ module load_store_unit
         .lsu_dtlb_hit_o (dtlb_hit),               // send in the same cycle as the request
         .lsu_dtlb_ppn_o (dtlb_ppn),               // send in the same cycle as the request
         // connecting PTW to D$ IF
-        .req_port_i     (dcache_req_ports_i[0]),
-        .req_port_o     (dcache_req_ports_o[0]),
+        .req_port_i     (mmu_dcache_rsp),
+        .req_port_o     (mmu_dcache_req),
         // icache address translation requests
         .icache_areq_i  (icache_areq_i),
         .asid_to_be_flushed_i,
@@ -187,8 +230,8 @@ module load_store_unit
         .lsu_dtlb_hit_o (dtlb_hit),               // send in the same cycle as the request
         .lsu_dtlb_ppn_o (dtlb_ppn),               // send in the same cycle as the request
         // connecting PTW to D$ IF
-        .req_port_i     (dcache_req_ports_i[0]),
-        .req_port_o     (dcache_req_ports_o[0]),
+        .req_port_o     (mmu_dcache_req),
+        .rsp_port_i     (mmu_dcache_rsp),
         // icache address translation requests
         .icache_areq_i  (icache_areq_i),
         .asid_to_be_flushed_i,
@@ -212,15 +255,15 @@ module load_store_unit
     assign icache_areq_o.fetch_paddr           = fetch_vaddr_plen;
     assign icache_areq_o.fetch_exception       = '0;
 
-    assign dcache_req_ports_o[0].address_index = '0;
-    assign dcache_req_ports_o[0].address_tag   = '0;
-    assign dcache_req_ports_o[0].data_wdata    = '0;
-    assign dcache_req_ports_o[0].data_req      = 1'b0;
-    assign dcache_req_ports_o[0].data_be       = '1;
-    assign dcache_req_ports_o[0].data_size     = 2'b11;
-    assign dcache_req_ports_o[0].data_we       = 1'b0;
-    assign dcache_req_ports_o[0].kill_req      = '0;
-    assign dcache_req_ports_o[0].tag_valid     = 1'b0;
+    assign mmu_dcache_req.address_index = '0;
+    assign mmu_dcache_req.address_tag   = '0;
+    assign mmu_dcache_req.data_wdata    = '0;
+    assign mmu_dcache_req.data_req      = 1'b0;
+    assign mmu_dcache_req.data_be       = '1;
+    assign mmu_dcache_req.data_size     = 2'b11;
+    assign mmu_dcache_req.data_we       = 1'b0;
+    assign mmu_dcache_req.kill_req      = '0;
+    assign mmu_dcache_req.tag_valid     = 1'b0;
 
     assign itlb_miss_o                         = 1'b0;
     assign dtlb_miss_o                         = 1'b0;
@@ -280,8 +323,8 @@ module load_store_unit
       .amo_req_o,
       .amo_resp_i,
       // to memory arbiter
-      .req_port_i           (dcache_req_ports_i[2]),
-      .req_port_o           (dcache_req_ports_o[2])
+      .req_port_i           (store_dcache_rsp),
+      .req_port_o           (store_dcache_req)
   );
 
   // ------------------
@@ -310,8 +353,8 @@ module load_store_unit
       .page_offset_matches_i(page_offset_matches),
       .store_buffer_empty_i (store_buffer_empty),
       // to memory arbiter
-      .req_port_i           (dcache_req_ports_i[1]),
-      .req_port_o           (dcache_req_ports_o[1]),
+      .req_port_i           (load_dcache_rsp),
+      .req_port_o           (load_dcache_req),
       .dcache_wbuffer_not_ni_i,
       .commit_tran_id_i,
       .*
@@ -496,4 +539,3 @@ module load_store_unit
   assign lsu_addr_trans_id_o = lsu_ctrl.trans_id;
 
 endmodule
-

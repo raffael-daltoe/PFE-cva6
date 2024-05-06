@@ -1195,7 +1195,7 @@ module decoder
         instruction_o.fu       = CVXIF;
         instruction_o.rs1[4:0] = instr.r4type.rs1;
         instruction_o.rs2[4:0] = instr.r4type.rs2;
-        instruction_o.rd[4:0]  = instr.r4type.rd;
+        instruction_o.rd[4:0]  = '0; // instr.r4type.rd;
         instruction_o.op       = ariane_pkg::OFFLOAD;
         imm_select             = RS3;
       end

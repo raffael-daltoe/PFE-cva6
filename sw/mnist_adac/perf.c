@@ -163,4 +163,5 @@ void perf_toc()
     printf("L1_DCACHE_STALL,    %10lu\n", perf_mhpcounters[29]);
     printf("L1_DCACHE_LATENCY,  %10lu\n", perf_mhpcounters[30]);
 #endif
+    printf("\n");
 }
