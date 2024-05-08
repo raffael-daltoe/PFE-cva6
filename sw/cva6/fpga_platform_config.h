@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Thales.
-// 
+//
 // Copyright and related rights are licensed under the Apache
 // License, Version 2.0 (the "License"); you may not use this file except in
 // compliance with the License.  You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 // Project Name:   CVA6 softcore
 // Language:       C header
 //
-// Description:    File which defines the FPGA platform, i.e base address for each 
+// Description:    File which defines the FPGA platform, i.e base address for each
 //                 peripheral and others information relating to FPGA platform.
 //
 // =========================================================================== #
@@ -35,7 +35,7 @@
  * Platform frequency
  */
 
-#define FPGA_UART_0_FREQUENCY 50000000
+#define FPGA_UART_0_FREQUENCY 40000000
 
 
 /***************************************************************************//**

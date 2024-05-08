@@ -1,5 +1,5 @@
 # Copyright (c) 2021 Thales.
-# 
+#
 # Copyright and related rights are licensed under the Solderpad
 # License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.  You may obtain a copy of the License at
@@ -19,8 +19,8 @@
 # Project Name:   CVA6 softcore
 # Language:       tcl
 #
-# Description:    Script to run place and route implementation of CV32A6 FPGA 
-#                 platform and which launches post-implementation simulation 
+# Description:    Script to run place and route implementation of CV32A6 FPGA
+#                 platform and which launches post-implementation simulation
 #                 of the software application on Questa.
 #
 # =========================================================================== #
@@ -88,15 +88,15 @@ update_compile_order -fileset sim_1
 
 if {$::env(SIM)} {
    puts "Behavioral simulation"
-   reset_simulation -simset sim_1 
+   reset_simulation -simset sim_1
    launch_simulation
-   
+
 } else {
     puts "Post implementation simulation"
     launch_runs synth_1
     wait_on_run synth_1
     open_run synth_1
-    
+
     # set for RuntimeOptimized implementation
     set_property "steps.place_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
     set_property "steps.route_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
@@ -104,7 +104,7 @@ if {$::env(SIM)} {
     launch_runs impl_1
     wait_on_run impl_1
     open_run impl_1
-    
+
     # reports
     exec mkdir -p reports_cva6_sim_impl/
     exec rm -rf reports_cva6_sim_impl/*
@@ -112,7 +112,7 @@ if {$::env(SIM)} {
     report_timing -max_paths 100 -nworst 100 -delay_type max -sort_by slack   -file reports_cva6_sim_impl/${project}.timing_WORST_100.rpt
     report_timing -nworst 1 -delay_type max -sort_by group                    -file reports_cva6_sim_impl/${project}.timing.rpt
     report_utilization -hierarchical                                          -file reports_cva6_sim_impl/${project}.utilization.rpt
-    
+
     set_property -name {questa.simulate.custom_udo} -value {../../../../../scripts/sim_routed.udo} -objects [get_filesets sim_1]
 
     reset_simulation -simset sim_1 -mode post-implementation -type functional

@@ -43,11 +43,11 @@ xlnx_clk_gen:
     clkout2_used: true
     clkout3_used: true
     clkout4_used: true
-    clkout1_requested_out_freq: 50
+    clkout1_requested_out_freq: 40
     clkout2_requested_out_freq: 125
     clkout3_requested_out_freq: 125
     clkout3_requested_phase: 90
-    clkout4_requested_out_freq: 50
+    clkout4_requested_out_freq: 40
     clkin1_jitter_ps: 50
 
 xlnx_ila:

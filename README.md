@@ -22,7 +22,7 @@ Questa Prime **version 10.7** must be used to measure power during the simulatio
 Other simulation tools and versions will receive no support from the organization team.
 
 ## Vitis/Vivado setting up
-For the contest, the CVA6 processor will be implemented on Zybo Z7-20 board from Digilent. This board integrates a Zynq 7000 FPGA from Xilinx. 
+For the contest, the CVA6 processor will be implemented on Zybo Z7-20 board from Digilent. This board integrates a Zynq 7000 FPGA from Xilinx.
 To do so, **Vitis 2020.1** environment from Xilinx needs to be installed.
 
 Furthermore, Digilent provides board files for each development board.
@@ -36,7 +36,7 @@ https://reference.digilentinc.com/reference/programmable-logic/guides/installati
 
 
 
-## Hardware 
+## Hardware
 If you have not yet done so, start provisioning the following:
 
 | Reference	                 | URL                                                                             |	List price |	Remark                            |
@@ -110,20 +110,20 @@ The `./` directory is mounted within the Docker container.
 Once in the **sw-docker** Docker container, you are in the default directory
 **/workdir** which corresponds to `./` directory in the host OS.
 
-3. To compile mnist application, run the following commands.
+3. To compile the mnist_adac application, run the following commands.
 
 ```
 user@[CONTAINER ID]:/workdir$ cd sw
-user@[CONTAINER ID]:/workdir/sw$ mkdir build
+user@[CONTAINER ID]:/workdir/sw$ mkdir -p build
 user@[CONTAINER ID]:/workdir/sw$ cd build
 user@[CONTAINER ID]:/workdir/sw/build$ cmake ..
-user@[CONTAINER ID]:/workdir/sw/build$ make mnist
+user@[CONTAINER ID]:/workdir/sw/build$ make mnist_adac
 ```
 
 Once the compilation process is complete, the resulting executable can be
 located in the build directory.
 It will bear the target's name without any extension.
-In this specific case, the executable will be named `mnist`.
+In this specific case, the executable will be named `mnist_adac`.
 
 4. Then, in the Docker container, launch **OpenOCD** in background:
 ```
@@ -150,7 +150,7 @@ Info : Listening on port 4444 for telnet connections
 
 5. In the Docker container (same terminal), launch **gdb** as following:
 ```
-user@[CONTAINER ID]:/workdir/sw/build$ riscv32-unknown-elf-gdb mnist
+user@[CONTAINER ID]:/workdir/sw/build$ riscv32-unknown-elf-gdb mnist_adac
 GNU gdb (GDB) 14.0.50.20230114-git
 Copyright (C) 2022 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
@@ -166,7 +166,7 @@ Find the GDB manual and other documentation resources online at:
 
 For help, type "help".
 Type "apropos word" to search for commands related to "word"...
-Reading symbols from mnist.elf...
+Reading symbols from mnist_adac...
 (gdb)
 ```
 
@@ -180,7 +180,7 @@ Warn : Prefer GDB command "target extended-remote 3333" instead of "target remot
 (gdb)
 ```
 
-7. In **gdb**, load **mnist** to CV32A6 FPGA platform by the load command:
+7. In `gdb`, load `mnist_adac` to CV32A6 FPGA platform by the load command:
 ```
 (gdb) load
 Loading section .vectors, size 0x80 lma 0x80000000
@@ -192,14 +192,14 @@ Loading section .data, size 0x91c lma 0x80020260
 Loading section .sdata, size 0x60 lma 0x80020b80
 Start address 0x80000080, load size 134108
 Transfer rate: 57 KB/sec, 9579 bytes/write.
-(gdb) 
+(gdb)
 ```
 
-8. At last, in gdb, you can run the **mnist** application by command **c**:
+8. At last, in gdb, you can run the `mnist_adac` application by command `c`:
 ```
 (gdb) c
 Continuing.
-(gdb) 
+(gdb)
 ```
 
 9. On the hyperterminal configured on /dev/ttyUSB0 11520-8-N-1, you should see:
@@ -224,9 +224,9 @@ To simulate a software application on CVA6 processor, run the following command:
 ```
 $ make sim MEM_PATH=<path to .mem file>
 ```
-For instance, if you want to run the **mnist** application, you will have to run :
+For instance, if you want to run the `mnist_adac` application, you will have to run :
 ```
-$ make sim MEM_PATH=sw/build/mnist.mem
+$ make sim MEM_PATH=sw/build/mnist_adac.mem
 ```
 
 **This command:**
@@ -263,24 +263,10 @@ That allows to have an estimation of the logical resources used by the CVA6 in t
 
 Command to run synthesis and place & route in "out of context" mode:
 ```
-$ make cva6_ooc CLK_PERIOD_NS=<period of the architecture in ns>
-```
-For example, if you want to clock the architecture to 50 MHz, you have to run:
-```
-$ make cva6_ooc CLK_PERIOD_NS=20
+$ make cva6_ooc
 ```
 By default, synthesis is performed in batch mode, however it is possible to run this command using Vivado GUI:
 ```
-$ make cva6_ooc CLK_PERIOD_NS=20 BATCH_MODE=0
+$ make cva6_ooc BATCH_MODE=0
 ```
-This command generates synthesis and place and route reports in **fpga/reports_cva6_ooc_synth** and **fpga/reports_cva6_ooc_impl**.
-
-
-
-
-
-
-
-
-
-
+This command generates synthesis and place and route reports in `fpga/reports_cva6_ooc_synth` and `fpga/reports_cva6_ooc_impl`.

@@ -131,8 +131,9 @@ void perf_toc()
     perf_mhpcounters[31] += CSR_READ(0xB1F);
 #endif
 
+    printf("INSTRUCTIONS,       %10lu\n", perf_retired);
     printf("CYCLES,             %10lu\n", perf_cycles);
-    printf("RETIRED,            %10lu\n", perf_retired);
+    // printf("RETIRED,            %10lu\n", perf_retired);
 #ifdef ADAC_HPM
     printf("L1_ICACHE_MISS,     %10lu\n", perf_mhpcounters[3]);
     printf("L1_DCACHE_MISS,     %10lu\n", perf_mhpcounters[4]);

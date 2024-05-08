@@ -67,19 +67,19 @@ module tb_cva6_zybo_z7_20;
 
     cva6_zybo_z7_20 DUT(
         .clk_sys(clk_i),
-        .cpu_reset       (rst_i),   
-  
+        .cpu_reset       (rst_i),
+
         // jtag
         .trst_n          (jtag_TRSTn),
         .tck             (jtag_TCK),
         .tms             (jtag_TMS),
         .tdi             (jtag_TDI),
         .tdo             (jtag_TDO_data),
-  
+
         //uart
-        .rx              (rx), 
-        .tx              (tx) 
-    ); 
+        .rx              (rx),
+        .tx              (tx)
+    );
 
 
     uart_bus #(
@@ -87,7 +87,7 @@ module tb_cva6_zybo_z7_20;
         .PARITY_EN ( 0)
     ) i_uart_bus(
         .rx              (tx),
-        .tx              (rx),  
+        .tx              (rx),
         .rx_en (1'b1)
     );
 
@@ -95,7 +95,7 @@ module tb_cva6_zybo_z7_20;
     assign jtag_TRSTn = s_trstn;
     assign jtag_TMS = s_tms;
     assign jtag_TDI = s_tdi;
-    
+
     assign s_tdo = jtag_TDO_data;
 
     initial begin
@@ -105,7 +105,7 @@ module tb_cva6_zybo_z7_20;
             #(CLOCK_PERIOD/2) clk_i = 1'b0;
         end
     end
-    
+
     // testbench driver process
     initial
     begin
@@ -118,7 +118,7 @@ module tb_cva6_zybo_z7_20;
 
         $display("[TB] %t - Asserting hard reset", $realtime);
         rst_i = 1'b1;
-        
+
         #200ns
 
         // testing on the jtag link
@@ -129,10 +129,10 @@ module tb_cva6_zybo_z7_20;
         #5000ns;
         jtag_pkg::jtag_softreset(s_tck, s_tms, s_trstn, s_tdi);
         #5000ns;
-    
+
         jtag_pkg::jtag_bypass_test(s_tck, s_tms, s_trstn, s_tdi, s_tdo);
-        #5000ns;       
-    
+        #5000ns;
+
         jtag_pkg::jtag_get_idcode(s_tck, s_tms, s_trstn, s_tdi, s_tdo);
         #5000ns;
 
@@ -141,14 +141,14 @@ module tb_cva6_zybo_z7_20;
         debug_mode_if.init_dmi_access(s_tck, s_tms, s_trstn, s_tdi);
 
         debug_mode_if.set_dmactive(1'b1, s_tck, s_tms, s_trstn, s_tdi, s_tdo);
-    
+
         debug_mode_if.set_hartsel(FC_CORE_ID, s_tck, s_tms, s_trstn, s_tdi, s_tdo);
 
         $display("[TB] %t - Halting the Core", $realtime);
         debug_mode_if.halt_harts(s_tck, s_tms, s_trstn, s_tdi, s_tdo);
-    
+
         debug_mode_if.test_read_sbcs(s_tck, s_tms, s_trstn, s_tdi, s_tdo);
-   
+
         // write dpc to addr_i so that we know where we resume
          debug_mode_if.write_reg_abstract_cmd(riscv::CSR_DPC,  BEGIN_MEM_INSTR,
                                      s_tck, s_tms, s_trstn, s_tdi, s_tdo);
