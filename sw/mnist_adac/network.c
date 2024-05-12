@@ -80,6 +80,15 @@
 #define L3_I_SIZE (L3_IN*L3_IY*L3_IX)
 #define L3_W_SIZE (L3_WX*L3_WY*L3_IA*L3_ON*L3_IB)
 
+#ifdef VECTOR_ASM
+
+extern void layer0(uint8_t *output, const uint8_t *input);
+extern void layer1(uint8_t *output, const uint8_t *input);
+extern void layer2(uint8_t *output, const uint8_t *input);
+extern void layer3(uint8_t *output, const uint8_t *input);
+
+#endif
+
 static uint8_t l0_out[L0_O_SIZE];
 static uint8_t l1_out[L1_O_SIZE];
 static uint8_t l2_out[L2_O_SIZE];
@@ -103,26 +112,27 @@ static uint8_t l3_out[L3_O_SIZE];
 #define CONV_LOOP_ON(L, O, I, W, ON_STEP) \
 while(on + ON_STEP <= L##_ON) { \
     VBIAS(S_VI32, L##_BIAS, ON_STEP); \
-    size_t o = (oy*L##_OX + ox)*L##_ON + on; \
+    size_t i = IDX_I(L, L##_SY*oy, L##_SX*ox, 0, 0); \
     for (size_t wy = 0; wy < L##_WY; wy++) { \
-        size_t iy = L##_SY*oy + wy; \
         for (size_t wx = 0; wx < L##_WX; wx++) { \
-            size_t ix = L##_SX*ox + wx; \
             for (size_t ia = 0; ia < L##_IA; ia++) { \
-                size_t i = IDX_I(L, iy, ix, ia, 0); \
                 size_t w = IDX_W(L, wy, wx, ia, on, 0); \
                 VLOAD(W_VI8, (void *) &W[w], ON_STEP*L##_IB); \
                 VLOAD(I_VU8, (void *) &I[i], L##_IB); \
                 VMACC(S_VI32, W_VI8, I_VU8, L##_IB); \
+                i += L##_IB; \
             } \
         } \
+        i += (L##_IX - L##_WX)*L##_IN; \
     } \
     VACTV(S_VI32, &O[o], L##_SHIFT, ON_STEP); \
+    o += ON_STEP; \
     on += ON_STEP; \
 }
 
 #define CONV(L, O, I, W) \
 do { \
+    size_t o = 0; \
     for (size_t oy = 0; oy < L##_OY; oy++) { \
         for (size_t ox = 0; ox < L##_OX; ox++) { \
             size_t on = 0; \
@@ -132,7 +142,7 @@ do { \
     } \
 } while(0)
 
-#else
+#elif !defined(VECTOR_ASM)
 
 #define CONV(L, O, I, W) \
 do { \
@@ -198,12 +208,21 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     ASSERT(crc == 0x4dfde263);
 #endif
 
+#ifdef DUMP
+    printf("input:\n");
+    hexdump(input, L0_I_SIZE);
+#endif
+
 #ifdef LAYER_PERF
     printf("L0\n");
     perf_tic();
 #endif
 
+#ifdef VECTOR_ASM
+    layer0(l0_out, input);
+#else
     CONV(L0, l0_out, input, l0_weight);
+#endif
 
 #ifdef LAYER_PERF
     perf_toc();
@@ -225,7 +244,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     perf_tic();
 #endif
 
+#ifdef VECTOR_ASM
+    layer1(l1_out, l0_out);
+#else
     CONV(L1, l1_out, l0_out, l1_weight);
+#endif
 
 #ifdef LAYER_PERF
     perf_toc();
@@ -247,7 +270,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     perf_tic();
 #endif
 
+#ifdef VECTOR_ASM
+    layer2(l2_out, l1_out);
+#else
     CONV(L2, l2_out, l1_out, l2_weight);
+#endif
 
 #ifdef LAYER_PERF
     perf_toc();
@@ -269,7 +296,11 @@ void inference(const uint8_t* input, int32_t* output, uint8_t* credence)
     perf_tic();
 #endif
 
+#ifdef VECTOR_ASM
+    layer3(l3_out, l2_out);
+#else
     CONV(L3, l3_out, l2_out, l3_weight);
+#endif
 
 #ifdef LAYER_PERF
     perf_toc();

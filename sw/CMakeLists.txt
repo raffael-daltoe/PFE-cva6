@@ -28,13 +28,15 @@ set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${COMMON_FLAGS}")
 set(CVA6_LINK_SCRIPT "${CMAKE_SOURCE_DIR}/cva6/link.ld")
 include_directories(${PROJECT_SOURCE_DIR}/cva6)
 file(GLOB_RECURSE CVA6_SOURCES
-    "${PROJECT_SOURCE_DIR}/cva6/*.S"
-    "${PROJECT_SOURCE_DIR}/cva6/*.c")
+    "${PROJECT_SOURCE_DIR}/cva6/*.c"
+    "${PROJECT_SOURCE_DIR}/cva6/*.S")
 add_library(cva6 STATIC ${CVA6_SOURCES})
 target_compile_options(cva6 PRIVATE -DPREALLOCATE=1 -DSTDIO_THRU_UART -w)
 
 function(add_benchmark NAME)
-    file(GLOB_RECURSE BM_SOURCES "${PROJECT_SOURCE_DIR}/${NAME}/*.c")
+    file(GLOB_RECURSE BM_SOURCES
+        "${PROJECT_SOURCE_DIR}/${NAME}/*.c"
+        "${PROJECT_SOURCE_DIR}/${NAME}/*.S")
 
     add_executable(${NAME} ${BM_SOURCES})
     target_link_libraries(${NAME} cva6)

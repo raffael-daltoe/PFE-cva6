@@ -14,7 +14,7 @@
 
    Description: linkerscript for the CV32A6 platform
 
-   =========================================================================== 
+   ===========================================================================
    Revisions  :
    Date        Version  Author       Description
    2020-10-06  0.1      S.Jacq       modification of the Test for CV32A6 softcore

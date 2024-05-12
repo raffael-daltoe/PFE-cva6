@@ -8,7 +8,7 @@
 #include <verilated_vcd_c.h>
 #include "Vxadac_verilator.h"
 
-#define MEM_SIZE (0x2FF00)
+#define MEM_SIZE (0xFFF00)
 #define MINI_RV32_RAM_SIZE (MEM_SIZE)
 #define MINIRV32_IMPLEMENTATION
 #define MINIRV32_HANDLE_MEM_STORE_CONTROL(addr, val) \
