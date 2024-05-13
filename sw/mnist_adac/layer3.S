@@ -1,252 +1,252 @@
-    .text
+.text
     .globl layer3
     .type layer3, @function
 layer3:
-    li t0, 1024
-    li a4, 11
-    la t4, weight
-    xadac.vbias 27, t0, 4
-    li t1, 4
+    li t1, 1024
+    li t2, 11
+    la t0, weight
+    xadac.vbias 18, t1, 4
+    li a4, 4
 layer3_oy0_ox0_oa0_wy0_wx0_ia_loop_begin:
-    beqz t1, layer3_oy0_ox0_oa0_wy0_wx0_ia_loop_end
-    xadac.vload 26, t4, 16
-    xadac.vload 25, a1, 4
-    xadac.vmacc 27, 26, 25, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 24, t4, 16
-    xadac.vload 23, a1, 4
-    xadac.vmacc 27, 24, 23, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 22, t4, 16
-    xadac.vload 21, a1, 4
-    xadac.vmacc 27, 22, 21, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 20, t4, 16
-    xadac.vload 19, a1, 4
-    xadac.vmacc 27, 20, 19, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 18, t4, 16
-    xadac.vload 26, a1, 4
-    xadac.vmacc 27, 18, 26, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 25, t4, 16
-    xadac.vload 24, a1, 4
-    xadac.vmacc 27, 25, 24, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 23, t4, 16
-    xadac.vload 22, a1, 4
-    xadac.vmacc 27, 23, 22, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 21, t4, 16
+    beqz a4, layer3_oy0_ox0_oa0_wy0_wx0_ia_loop_end
+    xadac.vload 19, t0, 16
     xadac.vload 20, a1, 4
-    xadac.vmacc 27, 21, 20, 4
-    addi t4, t4, 16
+    addi t0, t0, 16
     addi a1, a1, 4
-    addi t1, t1, -1
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    addi a4, a4, -1
+addi a1, a1, 4
     j layer3_oy0_ox0_oa0_wy0_wx0_ia_loop_begin
 layer3_oy0_ox0_oa0_wy0_wx0_ia_loop_end:
-    xadac.vload 19, t4, 16
-    xadac.vload 18, a1, 4
-    xadac.vmacc 27, 19, 18, 4
-    addi t4, t4, 16
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 26, t4, 16
-    xadac.vload 25, a1, 4
-    xadac.vmacc 27, 26, 25, 4
-    addi t4, t4, 16
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 24, t4, 16
-    xadac.vload 23, a1, 4
-    xadac.vmacc 27, 24, 23, 4
-    addi t4, t4, 16
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 22, t4, 16
-    xadac.vload 21, a1, 4
-    xadac.vmacc 27, 22, 21, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 20, t4, 16
-    xadac.vload 19, a1, 4
-    xadac.vmacc 27, 20, 19, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 18, t4, 16
+    xadac.vload 25, t0, 16
     xadac.vload 26, a1, 4
-    xadac.vmacc 27, 18, 26, 4
-    addi t4, t4, 16
+    addi t0, t0, 16
     addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
     addi a1, a1, 0
     addi a1, a1, -152
-    xadac.vactv 27, a0, a4, 4
+    xadac.vactv 18, a0, t2, 4
     addi a0, a0, 4
-    xadac.vbias 25, t0, 4
-    li t1, 4
+    xadac.vbias 18, t1, 4
+    li a4, 4
 layer3_oy0_ox0_oa1_wy0_wx0_ia_loop_begin:
-    beqz t1, layer3_oy0_ox0_oa1_wy0_wx0_ia_loop_end
-    xadac.vload 24, t4, 16
-    xadac.vload 23, a1, 4
-    xadac.vmacc 25, 24, 23, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 22, t4, 16
-    xadac.vload 21, a1, 4
-    xadac.vmacc 25, 22, 21, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 20, t4, 16
-    xadac.vload 19, a1, 4
-    xadac.vmacc 25, 20, 19, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 18, t4, 16
-    xadac.vload 26, a1, 4
-    xadac.vmacc 25, 18, 26, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 27, t4, 16
-    xadac.vload 24, a1, 4
-    xadac.vmacc 25, 27, 24, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 23, t4, 16
-    xadac.vload 22, a1, 4
-    xadac.vmacc 25, 23, 22, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 21, t4, 16
+    beqz a4, layer3_oy0_ox0_oa1_wy0_wx0_ia_loop_end
+    xadac.vload 19, t0, 16
     xadac.vload 20, a1, 4
-    xadac.vmacc 25, 21, 20, 4
-    addi t4, t4, 16
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 19, t4, 16
-    xadac.vload 18, a1, 4
-    xadac.vmacc 25, 19, 18, 4
-    addi t4, t4, 16
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    addi t1, t1, -1
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    addi a4, a4, -1
+addi a1, a1, 4
     j layer3_oy0_ox0_oa1_wy0_wx0_ia_loop_begin
 layer3_oy0_ox0_oa1_wy0_wx0_ia_loop_end:
-    xadac.vload 26, t4, 16
-    xadac.vload 27, a1, 4
-    xadac.vmacc 25, 26, 27, 4
-    addi t4, t4, 16
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 24, t4, 16
-    xadac.vload 23, a1, 4
-    xadac.vmacc 25, 24, 23, 4
-    addi t4, t4, 16
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 22, t4, 16
-    xadac.vload 21, a1, 4
-    xadac.vmacc 25, 22, 21, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 20, t4, 16
-    xadac.vload 19, a1, 4
-    xadac.vmacc 25, 20, 19, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 18, t4, 16
-    xadac.vload 26, a1, 4
-    xadac.vmacc 25, 18, 26, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 27, t4, 16
+    xadac.vload 23, t0, 16
     xadac.vload 24, a1, 4
-    xadac.vmacc 25, 27, 24, 4
-    addi t4, t4, 16
+    addi t0, t0, 16
     addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
     addi a1, a1, 0
     addi a1, a1, -152
-    xadac.vactv 25, a0, a4, 4
+    xadac.vactv 18, a0, t2, 4
     addi a0, a0, 4
-    xadac.vbias 23, t0, 4
-    li t1, 4
+    xadac.vbias 18, t1, 4
+    li a4, 4
 layer3_oy0_ox0_oa2_wy0_wx0_ia_loop_begin:
-    beqz t1, layer3_oy0_ox0_oa2_wy0_wx0_ia_loop_end
-    xadac.vload 22, t4, 16
-    xadac.vload 21, a1, 4
-    xadac.vmacc 23, 22, 21, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 20, t4, 16
-    xadac.vload 19, a1, 4
-    xadac.vmacc 23, 20, 19, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 18, t4, 16
-    xadac.vload 26, a1, 4
-    xadac.vmacc 23, 18, 26, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 27, t4, 16
-    xadac.vload 24, a1, 4
-    xadac.vmacc 23, 27, 24, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 25, t4, 16
-    xadac.vload 22, a1, 4
-    xadac.vmacc 23, 25, 22, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 21, t4, 16
+    beqz a4, layer3_oy0_ox0_oa2_wy0_wx0_ia_loop_end
+    xadac.vload 19, t0, 16
     xadac.vload 20, a1, 4
-    xadac.vmacc 23, 21, 20, 4
-    addi t4, t4, 16
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 19, t4, 16
-    xadac.vload 18, a1, 4
-    xadac.vmacc 23, 19, 18, 4
-    addi t4, t4, 16
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 26, t4, 16
-    xadac.vload 27, a1, 4
-    xadac.vmacc 23, 26, 27, 4
-    addi t4, t4, 16
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    addi t1, t1, -1
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    addi a4, a4, -1
+addi a1, a1, 4
     j layer3_oy0_ox0_oa2_wy0_wx0_ia_loop_begin
 layer3_oy0_ox0_oa2_wy0_wx0_ia_loop_end:
-    xadac.vload 24, t4, 16
-    xadac.vload 25, a1, 4
-    xadac.vmacc 23, 24, 25, 4
-    addi t4, t4, 16
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
     addi a1, a1, 4
-    xadac.vload 22, t4, 16
-    xadac.vload 21, a1, 4
-    xadac.vmacc 23, 22, 21, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 20, t4, 16
-    xadac.vload 19, a1, 4
-    xadac.vmacc 23, 20, 19, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 18, t4, 16
-    xadac.vload 26, a1, 4
-    xadac.vmacc 23, 18, 26, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 27, t4, 16
-    xadac.vload 24, a1, 4
-    xadac.vmacc 23, 27, 24, 4
-    addi t4, t4, 16
-    addi a1, a1, 4
-    xadac.vload 25, t4, 16
+    xadac.vload 21, t0, 16
     xadac.vload 22, a1, 4
-    xadac.vmacc 23, 25, 22, 4
-    addi t4, t4, 16
+    addi t0, t0, 16
     addi a1, a1, 4
+    xadac.vload 23, t0, 16
+    xadac.vload 24, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 25, t0, 16
+    xadac.vload 26, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
+    xadac.vmacc 18, 23, 24, 4
+    xadac.vmacc 18, 25, 26, 4
+    xadac.vload 19, t0, 16
+    xadac.vload 20, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vload 21, t0, 16
+    xadac.vload 22, a1, 4
+    addi t0, t0, 16
+    addi a1, a1, 4
+    xadac.vmacc 18, 19, 20, 4
+    xadac.vmacc 18, 21, 22, 4
     addi a1, a1, 0
     addi a1, a1, -152
-    xadac.vactv 23, a0, a4, 2
+    xadac.vactv 18, a0, t2, 2
     addi a0, a0, 2
     addi a1, a1, 150
     addi a1, a1, 0
