@@ -1,13 +1,14 @@
-Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
---------------------------------------------------------------------------------------
-| Tool Version : Vivado v.2020.1 (lin64) Build 2902540 Wed May 27 19:54:35 MDT 2020
-| Date         : Mon May 13 07:17:40 2024
-| Host         : phoenix running 64-bit Debian GNU/Linux 11 (bullseye)
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.2 (lin64) Build 4029153 Fri Oct 13 20:13:54 MDT 2023
+| Date         : Thu May 30 15:18:55 2024
+| Host         : raffael running 64-bit Ubuntu 22.04.4 LTS
 | Command      : check_timing -file reports_cva6_fpga_impl/cva6_fpga.check_timing.rpt
 | Design       : cva6_zybo_z7_20
 | Device       : 7z020-clg400
 | Speed File   : -1  PRODUCTION 1.12 2019-11-22
---------------------------------------------------------------------------------------
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
 
 
 check_timing report

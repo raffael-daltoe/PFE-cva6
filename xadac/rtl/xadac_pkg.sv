@@ -6,7 +6,7 @@ package xadac_pkg;
     localparam SizeT NoVs = 3;
 
     localparam SizeT AddrWidth    = 32;
-    localparam SizeT IdWidth      = 3;
+    localparam SizeT IdWidth      = 4;
     localparam SizeT InstrWidth   = 32;
     localparam SizeT RegAddrWidth = 5;
     localparam SizeT RegDataWidth = 32;
